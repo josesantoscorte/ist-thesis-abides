@@ -7,7 +7,7 @@ log/
 .idea/
 results/
 util/crypto/datasets
-venv/
+.venv/
 .idea/
 .ipynb/
 .ipynb_checkpoints/

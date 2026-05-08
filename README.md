@@ -1,22 +1,50 @@
-# ABIDES: Agent-Based Interactive Discrete Event Simulation environment
+# Macro Economy Simulation Core
 
-> ABIDES is an Agent-Based Interactive Discrete Event Simulation environment. ABIDES is designed from the ground up to support AI agent research in market applications. While simulations are certainly available within trading firms for their own internal use, there are no broadly available high-fidelity market simulation environments. We hope that the availability of such a platform will facilitate AI research in this important area. ABIDES currently enables the simulation of tens of thousands of trading agents interacting with an exchange agent to facilitate transactions. It supports configurable pairwise network latencies between each individual agent as well as the exchange. Our simulator's message-based design is modeled after NASDAQ's published equity trading protocols ITCH and OUCH. 
+This repository is a stripped-down, macro-economy simulation framework built on an event-driven kernel.
 
-Please see our arXiv paper for preliminary documentation:
+The codebase is intentionally minimal:
 
-https://arxiv.org/abs/1904.12066
+- `abides.py` - entrypoint
+- `Kernel.py` - event queue and simulation lifecycle
+- `message/Message.py` - message/event types
+- `agent/Agent.py` - base agent abstraction
+- `agent/` - agents (households, firms, bank, government, central bank)
+- `model/` - behavior functions (labor, production, credit)
+- `policy/` - fiscal, monetary, and automation policy hooks
+- `config/baseline.py` - default scenario
+- `cli/stats.py` and `cli/timeseries.py` - analysis tools
 
-Please see the wiki for tutorials and example configurations:
+## Install
 
-https://github.com/abides-sim/abides/wiki
-
-## Quickstart
+```bash
+python3 -m pip install -r requirements.txt
 ```
-mkdir project
-cd project
 
-git clone https://github.com/abides-sim/abides.git
-cd abides
-pip install -r requirements.txt
+## Run the baseline simulation
+
+```bash
+python3 -u abides.py -c baseline -l baseline -s 123
 ```
+
+or
+
+```bash
+./scripts/run.sh
+```
+
+## Analyze outputs
+
+```bash
+python3 -u cli/stats.py -l log/baseline
+python3 -u cli/timeseries.py -l log/baseline
+```
+
+Each run also writes `scenario_manifest.json` to its log directory for reproducibility.
+
+## Notes
+
+- The project is now macro-only.
+- Legacy market simulation modules were removed to keep scope and maintenance cost low.
+- Architecture boundaries are documented in `CORE_RUNTIME_BOUNDARY.md`.
+
 

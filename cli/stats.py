@@ -1,82 +1,70 @@
+import argparse
+import json
 import os
+
 import pandas as pd
-import sys
-
-# Auto-detect terminal width.
-pd.options.display.width = None
-pd.options.display.max_rows = 500000
-pd.options.display.max_colwidth = 200
-
-if len(sys.argv) < 2:
-  print ("Usage: python dump.py <log directory>")
-  sys.exit()
 
 
-# stats.py takes one or more log directories, reads the summary log files, and produces a summary of
-# the agent surpluses and returns by strategy (type + parameter settings).
+def _parse_summary_event(value):
+  if isinstance(value, dict):
+    return value
+  return {}
 
 
-# If more than one directory is given, the program aggregates across all of them.
+def main():
+  parser = argparse.ArgumentParser(description='Compute summary metrics from a baseline run.')
+  parser.add_argument('-l', '--log_dir', required=True, help='Path to run log directory.')
+  args = parser.parse_args()
 
-log_dirs = sys.argv[1:]
-agents = {}
-games = []
-stats = []
+  summary_path = os.path.join(args.log_dir, 'summary_log.bz2')
+  if not os.path.exists(summary_path):
+    raise FileNotFoundError("summary_log.bz2 not found in {}".format(args.log_dir))
 
-dir_count = 0
+  summary = pd.read_pickle(summary_path, compression='bz2')
+  households = summary[summary['EventType'] == 'HOUSEHOLD_FINAL_STATE']['Event'].apply(_parse_summary_event)
+  firms = summary[summary['EventType'] == 'FIRM_FINAL_STATE']['Event'].apply(_parse_summary_event)
+  banks = summary[summary['EventType'] == 'BANK_FINAL_STATE']['Event'].apply(_parse_summary_event)
+  governments = summary[summary['EventType'] == 'GOVERNMENT_FINAL_STATE']['Event'].apply(_parse_summary_event)
+  rates = summary[summary['EventType'] == 'POLICY_RATE_SET']['Event'].apply(_parse_summary_event)
 
-for log_dir in log_dirs:
-  if dir_count % 100 == 0: print ("Completed {} directories".format(dir_count))
-  dir_count += 1
-  for file in os.listdir(log_dir):
-    if 'summary' not in file: continue
+  household_rows = [x for x in households if x]
+  firm_rows = [x for x in firms if x]
+  bank_rows = [x for x in banks if x]
+  gov_rows = [x for x in governments if x]
+  rate_rows = [x for x in rates if x]
 
-    df = pd.read_pickle(os.path.join(log_dir,file), compression='bz2')
-  
-    events = [ 'STARTING_CASH', 'ENDING_CASH', 'FINAL_CASH_POSITION', 'FINAL_VALUATION' ]
-    event = "|".join(events)
-    df = df[df['EventType'].str.contains(event)]
-  
-    for x in df.itertuples():
-      id = x.AgentID
-      if id not in agents:
-        agents[id] = { 'AGENT_TYPE' : x.AgentStrategy }
-      agents[id][x.EventType] = x.Event
+  total_households = len(household_rows)
+  unemployed = sum(1 for x in household_rows if x.get('is_unemployed', False))
+  unemployment_rate = (unemployed / float(total_households)) if total_households else 0.0
 
-    game_ret = 0
-    game_surp = 0
+  avg_household_cash = int(sum(x.get('cash_cents', 0) for x in household_rows) / float(max(1, total_households)))
+  total_firm_cash = sum(x.get('cash_cents', 0) for x in firm_rows)
+  avg_automation = (sum(x.get('automation_level', 0.0) for x in firm_rows) / float(max(1, len(firm_rows))))
+  active_loans = sum(x.get('active_loans', 0) for x in bank_rows)
+  budget = gov_rows[-1].get('budget_cents', 0) if gov_rows else 0
+  policy_rate = rate_rows[-1].get('policy_rate', 0.0) if rate_rows else 0.0
 
-    for id, agent in agents.items():
-      at = agent['AGENT_TYPE']
+  stats = {
+    "log_dir": args.log_dir,
+    "households": total_households,
+    "unemployed_households": unemployed,
+    "unemployment_rate": unemployment_rate,
+    "average_household_cash_cents": avg_household_cash,
+    "total_firm_cash_cents": int(total_firm_cash),
+    "average_firm_automation_level": avg_automation,
+    "active_loans_count": int(active_loans),
+    "government_budget_cents": int(budget),
+    "final_policy_rate": float(policy_rate)
+  }
 
-      if 'Impact' in at: continue
+  manifest_path = os.path.join(args.log_dir, "scenario_manifest.json")
+  if os.path.exists(manifest_path):
+    with open(manifest_path, "r") as manifest_file:
+      stats["scenario_manifest"] = json.load(manifest_file)
 
-      sc = agent['STARTING_CASH']
-      ec = agent['ENDING_CASH']
-      fcp = agent['FINAL_CASH_POSITION']
-      fv = agent['FINAL_VALUATION']
-  
-      ret = ec - sc
-      surp = fcp - sc + fv
-
-      game_ret += ret
-      game_surp += surp
-
-      stats.append({ 'AgentType' : at, 'Return' : ret, 'Surplus' : surp })
-
-    games.append({ 'GameReturn' : game_ret, 'GameSurplus' : game_surp })
+  print(json.dumps(stats, indent=2, sort_keys=True))
 
 
-df_stats = pd.DataFrame(stats)
-df_game = pd.DataFrame(games)
+if __name__ == '__main__':
+  main()
 
-print ("Agent Mean")
-print (df_stats.groupby('AgentType').mean())
-print ("Agent Std")
-print (df_stats.groupby('AgentType').std())
-print ("Game Mean")
-print (df_game.mean())
-print ("Game Std")
-print (df_game.std())
-
-print ("\nRead summary files in {} log directories.".format(dir_count))

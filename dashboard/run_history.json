@@ -1,0 +1,283 @@
+{
+  "runs": [
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:27:24.738643Z",
+      "live": {
+        "messages_processed": 0,
+        "progress_pct": 100.0,
+        "simulation_time": null,
+        "wallclock_elapsed": null
+      },
+      "log_dir": "baseline",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 123456789,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "baseline",
+      "started_at": "2026-05-09T13:27:24.738643Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:27:24.738993Z",
+      "live": {
+        "messages_processed": 0,
+        "progress_pct": 100.0,
+        "simulation_time": null,
+        "wallclock_elapsed": null
+      },
+      "log_dir": "run-20260509-122006",
+      "params": {
+        "automation_adoption_rate": 0.07,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 2,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.85,
+        "retraining_subsidy": 0.03,
+        "seed": 2292541961,
+        "task_substitution_elasticity": 0.55,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260509-122006",
+      "started_at": "2026-05-09T13:27:24.738993Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:27:24.739272Z",
+      "live": {
+        "messages_processed": 0,
+        "progress_pct": 100.0,
+        "simulation_time": null,
+        "wallclock_elapsed": null
+      },
+      "log_dir": "sanity_check",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 4,
+        "households": 20,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 1,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 42,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "sanity_check",
+      "started_at": "2026-05-09T13:27:24.739272Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:27:24.739464Z",
+      "live": {
+        "messages_processed": 0,
+        "progress_pct": 100.0,
+        "simulation_time": null,
+        "wallclock_elapsed": null
+      },
+      "log_dir": "run-20260509-122203",
+      "params": {
+        "automation_adoption_rate": 0.07,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 2,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.85,
+        "retraining_subsidy": 0.03,
+        "seed": 2409729791,
+        "task_substitution_elasticity": 0.55,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260509-122203",
+      "started_at": "2026-05-09T13:27:24.739464Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:27:24.739585Z",
+      "live": {
+        "messages_processed": 0,
+        "progress_pct": 100.0,
+        "simulation_time": null,
+        "wallclock_elapsed": null
+      },
+      "log_dir": "run-20260509-113802",
+      "params": {
+        "automation_adoption_rate": 0.0,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 1.0,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 4063956661,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260509-113802",
+      "started_at": "2026-05-09T13:27:24.739585Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:27:24.739764Z",
+      "live": {
+        "messages_processed": 0,
+        "progress_pct": 100.0,
+        "simulation_time": null,
+        "wallclock_elapsed": null
+      },
+      "log_dir": "run-20260509-120624",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 1470909648,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260509-120624",
+      "started_at": "2026-05-09T13:27:24.739764Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:27:24.739940Z",
+      "live": {
+        "messages_processed": 0,
+        "progress_pct": 100.0,
+        "simulation_time": null,
+        "wallclock_elapsed": null
+      },
+      "log_dir": "run-20260509-120034",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 1120980517,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260509-120034",
+      "started_at": "2026-05-09T13:27:24.739940Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:27:24.740062Z",
+      "live": {
+        "messages_processed": 0,
+        "progress_pct": 100.0,
+        "simulation_time": null,
+        "wallclock_elapsed": null
+      },
+      "log_dir": "run-20260509-115743",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 20,
+        "households": 200,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 949621445,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 168
+      },
+      "pid": null,
+      "run_id": "run-20260509-115743",
+      "started_at": "2026-05-09T13:27:24.740062Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:27:24.740244Z",
+      "live": {
+        "messages_processed": 0,
+        "progress_pct": 100.0,
+        "simulation_time": null,
+        "wallclock_elapsed": null
+      },
+      "log_dir": "run-20260509-111456",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 2677916572,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260509-111456",
+      "started_at": "2026-05-09T13:27:24.740244Z",
+      "status": "completed"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LOG_ROOT = os.path.join(REPO_ROOT, "log")
+RUN_HISTORY_PATH = os.path.join(REPO_ROOT, "dashboard", "run_history.json")
 SIMULATION_START = pd.Timestamp("2035-01-01")
 
 PROGRESS_RE = re.compile(
@@ -99,7 +100,122 @@ class SimulationManager:
     def __init__(self) -> None:
         self._runs: Dict[str, RunState] = {}
         self._current_run_id: Optional[str] = None
-        self._manager_lock = threading.Lock()
+        self._manager_lock = threading.RLock()
+        self._load_persisted_runs()
+        self._discover_runs_from_logs()
+
+    def _serialize_run(self, run: RunState) -> Dict[str, Any]:
+        return {
+            "run_id": run.run_id,
+            "params": run.params,
+            "log_dir": run.log_dir,
+            "status": run.status,
+            "pid": run.pid,
+            "started_at": run.started_at,
+            "finished_at": run.finished_at,
+            "exit_code": run.exit_code,
+            "error": run.error,
+            "live": {
+                "simulation_time": run.live.simulation_time,
+                "messages_processed": run.live.messages_processed,
+                "wallclock_elapsed": run.live.wallclock_elapsed,
+                "progress_pct": run.live.progress_pct,
+            },
+        }
+
+    def _persist_runs(self) -> None:
+        with self._manager_lock:
+            os.makedirs(os.path.dirname(RUN_HISTORY_PATH), exist_ok=True)
+            payload = {
+                "runs": [self._serialize_run(run) for run in self._runs.values()],
+            }
+            with open(RUN_HISTORY_PATH, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2, sort_keys=True)
+
+    def _load_persisted_runs(self) -> None:
+        if not os.path.exists(RUN_HISTORY_PATH):
+            return
+        try:
+            with open(RUN_HISTORY_PATH, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+        except Exception:
+            return
+
+        for item in payload.get("runs", []):
+            run = RunState(
+                run_id=str(item.get("run_id", "")),
+                params=item.get("params", {}),
+                log_dir=str(item.get("log_dir", "")),
+                status=str(item.get("status", "completed")),
+                pid=item.get("pid"),
+                started_at=str(item.get("started_at") or datetime.utcnow().isoformat() + "Z"),
+                finished_at=item.get("finished_at"),
+                exit_code=item.get("exit_code"),
+                error=item.get("error"),
+            )
+            live = item.get("live", {})
+            run.live = LiveProgress(
+                simulation_time=live.get("simulation_time"),
+                messages_processed=int(live.get("messages_processed", 0)),
+                wallclock_elapsed=live.get("wallclock_elapsed"),
+                progress_pct=float(live.get("progress_pct", 100.0)),
+            )
+            run.lines.clear()
+            if run.run_id:
+                if run.status in {"running", "stopping"}:
+                    run.status = "failed"
+                    run.error = "Run was interrupted by dashboard restart."
+                    run.finished_at = run.finished_at or datetime.utcnow().isoformat() + "Z"
+                    run.exit_code = run.exit_code if run.exit_code is not None else -1
+                self._runs[run.run_id] = run
+
+    def _discover_runs_from_logs(self) -> None:
+        if not os.path.isdir(LOG_ROOT):
+            return
+
+        for entry in os.listdir(LOG_ROOT):
+            run_log_dir = os.path.join(LOG_ROOT, entry)
+            manifest_path = os.path.join(run_log_dir, "scenario_manifest.json")
+            if not os.path.isdir(run_log_dir) or not os.path.exists(manifest_path):
+                continue
+            if entry in self._runs:
+                continue
+
+            try:
+                with open(manifest_path, "r", encoding="utf-8") as f:
+                    manifest = json.load(f)
+            except Exception:
+                manifest = {}
+
+            started_at = datetime.utcnow().isoformat() + "Z"
+            run = RunState(
+                run_id=entry,
+                params={
+                    "seed": manifest.get("seed"),
+                    "households": manifest.get("households", 120),
+                    "firms": manifest.get("firms", 15),
+                    "months": manifest.get("months", 18),
+                    "wake_hours": manifest.get("wake_hours", 24),
+                    "automation_adoption_rate": manifest.get("automation_adoption_rate", 0.02),
+                    "task_substitution_elasticity": manifest.get("task_substitution_elasticity", 0.30),
+                    "productivity_gain_factor": manifest.get("productivity_gain_factor", 0.45),
+                    "labor_displacement_lag": manifest.get("labor_displacement_lag", 3),
+                    "income_tax_rate": manifest.get("income_tax_rate", 0.18),
+                    "unemployment_support": manifest.get("unemployment_support", 9000),
+                    "retraining_subsidy": manifest.get("retraining_subsidy", 0.03),
+                    "neutral_rate": manifest.get("neutral_rate", 0.02),
+                },
+                log_dir=entry,
+                status="completed",
+                pid=None,
+                started_at=started_at,
+                finished_at=started_at,
+                exit_code=0,
+            )
+            run.live.progress_pct = 100.0
+            self._runs[run.run_id] = run
+
+        self._persist_runs()
 
     def _derive_progress_pct(self, months: int, simulation_time: str) -> float:
         try:
@@ -145,6 +261,7 @@ class SimulationManager:
         with self._manager_lock:
             if self._current_run_id == run.run_id:
                 self._current_run_id = None
+        self._persist_runs()
 
     def start(self, request: StartSimulationRequest) -> Dict[str, Any]:
         with self._manager_lock:
@@ -212,6 +329,7 @@ class SimulationManager:
             run = RunState(run_id=run_id, params=params, log_dir=log_dir, process=process, pid=process.pid)
             self._runs[run_id] = run
             self._current_run_id = run_id
+            self._persist_runs()
 
             t = threading.Thread(target=self._reader_thread, args=(run,), daemon=True)
             t.start()
@@ -236,9 +354,11 @@ class SimulationManager:
             run.status = "stopping"
             run.process.terminate()
             run.lines.append("Requested graceful stop from dashboard.")
+            self._persist_runs()
             return run.as_dict()
 
     def list_runs(self) -> List[Dict[str, Any]]:
+        self._discover_runs_from_logs()
         with self._manager_lock:
             runs = list(self._runs.values())
         runs.sort(key=lambda r: r.started_at, reverse=True)

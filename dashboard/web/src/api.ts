@@ -1,4 +1,4 @@
-import type { ResultsResponse, RunState, SimulationParams } from "./types";
+import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams } from "./types";
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
@@ -39,4 +39,8 @@ export async function stopCurrentRun(): Promise<RunState> {
 
 export async function getRunResults(runId: string): Promise<ResultsResponse> {
   return request<ResultsResponse>(`/runs/${runId}/results`);
+}
+
+export async function getMonitorSnapshot(): Promise<MonitorSnapshot> {
+  return request<MonitorSnapshot>("/monitor");
 }

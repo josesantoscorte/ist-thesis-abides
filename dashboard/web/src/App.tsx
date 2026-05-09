@@ -11,8 +11,8 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import { getCurrentRun, getRunResults, getRuns, startRun, stopCurrentRun } from "./api";
-import type { ResultsResponse, RunState, SimulationParams } from "./types";
+import { getCurrentRun, getMonitorSnapshot, getRunResults, getRuns, startRun, stopCurrentRun } from "./api";
+import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams } from "./types";
 import "./styles.css";
 
 const defaultParams: SimulationParams = {
@@ -80,6 +80,16 @@ function pct(value: number): string {
   return `${(value * 100).toFixed(2)}%`;
 }
 
+function percentValue(value?: number): string {
+  if (value === undefined || value === null || Number.isNaN(value)) return "-";
+  return `${value.toFixed(1)}%`;
+}
+
+function mbValue(value?: number): string {
+  if (value === undefined || value === null || Number.isNaN(value)) return "-";
+  return `${value.toFixed(1)} MB`;
+}
+
 export default function App() {
   const [params, setParams] = useState<SimulationParams>(defaultParams);
   const [run, setRun] = useState<RunState | null>(null);
@@ -91,6 +101,7 @@ export default function App() {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(() => {
     return window.localStorage.getItem("abides.selected.run");
   });
+  const [monitor, setMonitor] = useState<MonitorSnapshot | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const previousRunStatus = useRef<RunState["status"] | null>(null);
@@ -105,10 +116,11 @@ export default function App() {
 
     const refresh = async () => {
       try {
-        const [current, history] = await Promise.all([getCurrentRun(), getRuns()]);
+        const [current, history, monitorSnapshot] = await Promise.all([getCurrentRun(), getRuns(), getMonitorSnapshot()]);
         if (!mounted) return;
         setRun(current);
         setRuns(history);
+        setMonitor(monitorSnapshot);
       } catch (e) {
         if (!mounted) return;
         setError((e as Error).message);
@@ -361,39 +373,72 @@ export default function App() {
 
         <main className="workspace">
           {activeTab === "monitor" ? (
-          <section className="panel">
-            <h3>Live Monitor</h3>
-            {run ? (
-              <>
-                <div className="kpis live-kpis">
-                  <div className="kpi">
-                    <strong>Status</strong>
-                    <span>{run.status}</span>
-                  </div>
-                  <div className="kpi">
-                    <strong>Messages</strong>
-                    <span>{run.live.messages_processed.toLocaleString()}</span>
-                  </div>
-                  <div className="kpi">
-                    <strong>Simulation Time</strong>
-                    <span className="value-nowrap">{run.live.simulation_time ?? "-"}</span>
-                  </div>
-                  <div className="kpi">
-                    <strong>Wallclock</strong>
-                    <span className="value-nowrap">{run.live.wallclock_elapsed ?? "-"}</span>
+          <section className="live-monitor-layout">
+            <section className="panel">
+              <h3>System Telemetry</h3>
+              <div className="monitor-groups">
+                <div className="monitor-box">
+                  <h4>
+                    <span className="ui-icon">◍</span> Hardware
+                  </h4>
+                  <div className="kpis live-kpis live-top-metrics">
+                    <div className="kpi">
+                      <strong>Host CPU</strong>
+                      <span>{percentValue(monitor?.host_system?.cpu_percent)}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="progress">
-                  <div className="progress-fill" style={{ width: `${run.live.progress_pct}%` }} />
+                <div className="monitor-box">
+                  <h4>
+                    <span className="ui-icon">◔</span> Simulation Runtime
+                  </h4>
+                  <div className="kpis live-kpis live-top-metrics">
+                    <div className="kpi">
+                      <strong>Simulation CPU</strong>
+                      <span>{run ? percentValue(run.live.simulation_process?.cpu_percent) : "-"}</span>
+                    </div>
+                    <div className="kpi">
+                      <strong>Simulation RAM (RSS)</strong>
+                      <span>{run ? mbValue(run.live.simulation_process?.memory_rss_mb) : "-"}</span>
+                    </div>
+                  </div>
                 </div>
-                <small>{run.live.progress_pct.toFixed(1)}% complete</small>
+              </div>
+            </section>
+            <section className="panel">
+              <h3>Simulation Monitoring</h3>
+              {run ? (
+                <>
+                  <div className="kpis live-kpis">
+                    <div className="kpi">
+                      <strong>Status</strong>
+                      <span>{run.status}</span>
+                    </div>
+                    <div className="kpi">
+                      <strong>Messages</strong>
+                      <span>{run.live.messages_processed.toLocaleString()}</span>
+                    </div>
+                    <div className="kpi">
+                      <strong>Simulation Time</strong>
+                      <span className="value-nowrap">{run.live.simulation_time ?? "-"}</span>
+                    </div>
+                    <div className="kpi">
+                      <strong>Wallclock</strong>
+                      <span className="value-nowrap">{run.live.wallclock_elapsed ?? "-"}</span>
+                    </div>
+                  </div>
+                  <div className="progress">
+                    <div className="progress-fill" style={{ width: `${run.live.progress_pct}%` }} />
+                  </div>
+                  <small>{run.live.progress_pct.toFixed(1)}% complete</small>
 
-                <h3 className="subsection">Recent Runtime Logs</h3>
-                <pre className="logs">{run.recent_logs.slice(-26).join("\n")}</pre>
-              </>
-            ) : (
-              <p>No active run right now. Adjust parameters on the left and start a simulation.</p>
-            )}
+                  <h3 className="subsection">Recent Runtime Logs</h3>
+                  <pre className="logs">{run.recent_logs.slice(-26).join("\n")}</pre>
+                </>
+              ) : (
+                <p>No active run right now. Adjust parameters on the left and start a simulation.</p>
+              )}
+            </section>
           </section>
           ) : (
           <section className="split-layout">

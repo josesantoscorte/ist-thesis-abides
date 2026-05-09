@@ -21,6 +21,46 @@ export interface LiveState {
   messages_processed: number;
   wallclock_elapsed: string | null;
   progress_pct: number;
+  simulation_process?: {
+    available?: boolean;
+    cpu_percent?: number;
+    memory_rss_mb?: number;
+    memory_vms_mb?: number;
+    threads?: number;
+    open_files?: number;
+    status?: string;
+    uptime_seconds?: number | null;
+    reason?: string;
+  };
+  api_process?: {
+    available?: boolean;
+    cpu_percent?: number;
+    memory_rss_mb?: number;
+    memory_vms_mb?: number;
+    threads?: number;
+    open_files?: number;
+    status?: string;
+    uptime_seconds?: number | null;
+    reason?: string;
+  };
+  host_system?: {
+    available?: boolean;
+    cpu_percent?: number;
+    ram_percent?: number;
+    ram_used_gb?: number;
+    ram_total_gb?: number;
+    reason?: string;
+  };
+  gpu?: {
+    available?: boolean;
+    source?: string;
+    gpu_count?: number;
+    utilization_percent?: number;
+    memory_used_mb?: number;
+    memory_total_mb?: number;
+    process_memory_mb?: number | null;
+    reason?: string;
+  };
 }
 
 export interface RunState {
@@ -42,4 +82,27 @@ export interface ResultsResponse {
   log_dir: string;
   stats: Record<string, unknown>;
   timeseries: Array<Record<string, string | number>>;
+}
+
+export interface MonitorSnapshot {
+  host_system?: {
+    available?: boolean;
+    cpu_percent?: number;
+    ram_percent?: number;
+    ram_used_gb?: number;
+    ram_total_gb?: number;
+    reason?: string;
+  };
+  api_process?: {
+    available?: boolean;
+    cpu_percent?: number;
+    memory_rss_mb?: number;
+    reason?: string;
+  };
+  gpu?: {
+    available?: boolean;
+    utilization_percent?: number;
+    reason?: string;
+  };
+  current_run_id?: string | null;
 }

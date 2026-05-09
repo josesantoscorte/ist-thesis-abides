@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -8,12 +9,16 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Deque, Dict, List, Optional
+from typing import Any, Deque, Dict, List, Optional, Tuple
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+try:
+    import psutil
+except Exception:  # pragma: no cover - fallback when psutil unavailable
+    psutil = None
 
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -56,6 +61,10 @@ class LiveProgress:
     messages_processed: int = 0
     wallclock_elapsed: Optional[str] = None
     progress_pct: float = 0.0
+    simulation_process: Dict[str, Any] = field(default_factory=dict)
+    api_process: Dict[str, Any] = field(default_factory=dict)
+    host_system: Dict[str, Any] = field(default_factory=dict)
+    gpu: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -91,6 +100,10 @@ class RunState:
                     "messages_processed": self.live.messages_processed,
                     "wallclock_elapsed": self.live.wallclock_elapsed,
                     "progress_pct": self.live.progress_pct,
+                    "simulation_process": self.live.simulation_process,
+                    "api_process": self.live.api_process,
+                    "host_system": self.live.host_system,
+                    "gpu": self.live.gpu,
                 },
                 "recent_logs": list(self.lines),
             }
@@ -100,7 +113,14 @@ class SimulationManager:
     def __init__(self) -> None:
         self._runs: Dict[str, RunState] = {}
         self._current_run_id: Optional[str] = None
+        self._proc_cpu_tracker: Dict[int, Tuple[float, float]] = {}
         self._manager_lock = threading.RLock()
+        if psutil is not None:
+            try:
+                psutil.cpu_percent(interval=None)
+                psutil.Process(os.getpid()).cpu_percent(interval=None)
+            except Exception:
+                pass
         self._load_persisted_runs()
         self._discover_runs_from_logs()
 
@@ -120,6 +140,10 @@ class SimulationManager:
                 "messages_processed": run.live.messages_processed,
                 "wallclock_elapsed": run.live.wallclock_elapsed,
                 "progress_pct": run.live.progress_pct,
+                "simulation_process": run.live.simulation_process,
+                "api_process": run.live.api_process,
+                "host_system": run.live.host_system,
+                "gpu": run.live.gpu,
             },
         }
 
@@ -159,6 +183,10 @@ class SimulationManager:
                 messages_processed=int(live.get("messages_processed", 0)),
                 wallclock_elapsed=live.get("wallclock_elapsed"),
                 progress_pct=float(live.get("progress_pct", 100.0)),
+                simulation_process=live.get("simulation_process", {}),
+                api_process=live.get("api_process", {}),
+                host_system=live.get("host_system", {}),
+                gpu=live.get("gpu", {}),
             )
             run.lines.clear()
             if run.run_id:
@@ -213,9 +241,160 @@ class SimulationManager:
                 exit_code=0,
             )
             run.live.progress_pct = 100.0
+            run.live.simulation_process = {}
+            run.live.api_process = {}
+            run.live.host_system = {}
+            run.live.gpu = {}
             self._runs[run.run_id] = run
 
         self._persist_runs()
+
+    def _collect_process_metrics(self, pid: Optional[int], started_at: Optional[str]) -> Dict[str, Any]:
+        if psutil is None:
+            return {"available": False, "reason": "psutil_not_installed"}
+        if pid is None:
+            return {"available": False, "reason": "pid_missing"}
+        try:
+            proc = psutil.Process(pid)
+            now = time.time()
+            cpu_times = proc.cpu_times()
+            total_cpu_time = float(cpu_times.user + cpu_times.system)
+            previous = self._proc_cpu_tracker.get(int(pid))
+            self._proc_cpu_tracker[int(pid)] = (total_cpu_time, now)
+            if previous:
+                previous_total, previous_ts = previous
+                elapsed = max(1e-6, now - previous_ts)
+                cpu = max(0.0, (total_cpu_time - previous_total) * 100.0 / elapsed)
+            else:
+                cpu = proc.cpu_percent(interval=0.05)
+            mem = proc.memory_info()
+            threads = proc.num_threads()
+            open_files = len(proc.open_files())
+            status = proc.status()
+            uptime_seconds = None
+            if started_at:
+                try:
+                    start_dt = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+                    uptime_seconds = max(0.0, (datetime.utcnow().replace(tzinfo=start_dt.tzinfo) - start_dt).total_seconds())
+                except Exception:
+                    uptime_seconds = None
+            return {
+                "available": True,
+                "cpu_percent": float(cpu),
+                "memory_rss_mb": float(mem.rss) / (1024.0 * 1024.0),
+                "memory_vms_mb": float(mem.vms) / (1024.0 * 1024.0),
+                "threads": int(threads),
+                "open_files": int(open_files),
+                "status": status,
+                "uptime_seconds": uptime_seconds,
+            }
+        except Exception as exc:
+            if pid is not None and int(pid) in self._proc_cpu_tracker:
+                self._proc_cpu_tracker.pop(int(pid), None)
+            return {"available": False, "reason": f"process_unavailable:{exc.__class__.__name__}"}
+
+    def _collect_system_metrics(self) -> Dict[str, Any]:
+        if psutil is None:
+            return {"available": False, "reason": "psutil_not_installed"}
+        try:
+            vm = psutil.virtual_memory()
+            return {
+                "available": True,
+                "cpu_percent": float(psutil.cpu_percent(interval=None)),
+                "ram_percent": float(vm.percent),
+                "ram_used_gb": float(vm.used) / (1024.0 * 1024.0 * 1024.0),
+                "ram_total_gb": float(vm.total) / (1024.0 * 1024.0 * 1024.0),
+            }
+        except Exception as exc:
+            return {"available": False, "reason": f"system_unavailable:{exc.__class__.__name__}"}
+
+    def _collect_gpu_metrics(self, pid: Optional[int]) -> Dict[str, Any]:
+        nvidia_smi = shutil.which("nvidia-smi")
+        if not nvidia_smi:
+            return {"available": False, "reason": "nvidia_smi_not_found"}
+        try:
+            gpu_out = subprocess.check_output(
+                [
+                    nvidia_smi,
+                    "--query-gpu=utilization.gpu,memory.used,memory.total",
+                    "--format=csv,noheader,nounits",
+                ],
+                text=True,
+                timeout=1.5,
+            ).strip()
+            gpu_rows = [row.strip() for row in gpu_out.splitlines() if row.strip()]
+            if not gpu_rows:
+                return {"available": False, "reason": "no_gpu_rows"}
+
+            parsed = []
+            for row in gpu_rows:
+                parts = [x.strip() for x in row.split(",")]
+                if len(parts) < 3:
+                    continue
+                parsed.append(
+                    {
+                        "utilization_percent": float(parts[0]),
+                        "memory_used_mb": float(parts[1]),
+                        "memory_total_mb": float(parts[2]),
+                    }
+                )
+            if not parsed:
+                return {"available": False, "reason": "gpu_parse_failed"}
+
+            process_memory_mb = None
+            if pid is not None:
+                try:
+                    proc_out = subprocess.check_output(
+                        [
+                            nvidia_smi,
+                            "--query-compute-apps=pid,used_memory",
+                            "--format=csv,noheader,nounits",
+                        ],
+                        text=True,
+                        timeout=1.5,
+                    ).strip()
+                    proc_rows = [row.strip() for row in proc_out.splitlines() if row.strip()]
+                    total = 0.0
+                    for row in proc_rows:
+                        parts = [x.strip() for x in row.split(",")]
+                        if len(parts) < 2:
+                            continue
+                        if int(parts[0]) == int(pid):
+                            total += float(parts[1])
+                    process_memory_mb = total
+                except Exception:
+                    process_memory_mb = None
+
+            first = parsed[0]
+            return {
+                "available": True,
+                "source": "nvidia-smi",
+                "gpu_count": len(parsed),
+                "utilization_percent": first["utilization_percent"],
+                "memory_used_mb": first["memory_used_mb"],
+                "memory_total_mb": first["memory_total_mb"],
+                "process_memory_mb": process_memory_mb,
+            }
+        except Exception as exc:
+            return {"available": False, "reason": f"gpu_query_failed:{exc.__class__.__name__}"}
+
+    def _refresh_live_metrics(self, run: RunState) -> None:
+        with run.lock:
+            run.live.simulation_process = self._collect_process_metrics(run.pid, run.started_at)
+            run.live.api_process = self._collect_process_metrics(os.getpid(), None)
+            run.live.host_system = self._collect_system_metrics()
+            run.live.gpu = self._collect_gpu_metrics(run.pid)
+
+    def get_monitor_snapshot(self) -> Dict[str, Any]:
+        with self._manager_lock:
+            active_run = self._runs[self._current_run_id] if self._current_run_id else None
+        snapshot = {
+            "host_system": self._collect_system_metrics(),
+            "api_process": self._collect_process_metrics(os.getpid(), None),
+            "gpu": self._collect_gpu_metrics(active_run.pid if active_run else None),
+            "current_run_id": active_run.run_id if active_run else None,
+        }
+        return snapshot
 
     def _derive_progress_pct(self, months: int, simulation_time: str) -> float:
         try:
@@ -327,6 +506,11 @@ class SimulationManager:
             )
 
             run = RunState(run_id=run_id, params=params, log_dir=log_dir, process=process, pid=process.pid)
+            if psutil is not None:
+                try:
+                    psutil.Process(process.pid).cpu_percent(interval=None)
+                except Exception:
+                    pass
             self._runs[run_id] = run
             self._current_run_id = run_id
             self._persist_runs()
@@ -340,7 +524,9 @@ class SimulationManager:
         with self._manager_lock:
             if not self._current_run_id:
                 return None
-            return self._runs[self._current_run_id].as_dict()
+            run = self._runs[self._current_run_id]
+        self._refresh_live_metrics(run)
+        return run.as_dict()
 
     def stop_current(self) -> Dict[str, Any]:
         with self._manager_lock:
@@ -368,7 +554,10 @@ class SimulationManager:
         with self._manager_lock:
             if run_id not in self._runs:
                 raise HTTPException(status_code=404, detail="Run not found.")
-            return self._runs[run_id].as_dict()
+            run = self._runs[run_id]
+        if run.status in {"running", "stopping"}:
+            self._refresh_live_metrics(run)
+        return run.as_dict()
 
 
 def _parse_summary_event(value: Any) -> Dict[str, Any]:
@@ -501,6 +690,11 @@ def current_run() -> Dict[str, Any]:
     if not run:
         return {"run": None}
     return {"run": run}
+
+
+@app.get("/api/monitor")
+def monitor() -> Dict[str, Any]:
+    return manager.get_monitor_snapshot()
 
 
 @app.post("/api/runs")

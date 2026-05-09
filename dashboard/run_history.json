@@ -5,8 +5,12 @@
       "exit_code": 0,
       "finished_at": "2026-05-09T13:27:24.738643Z",
       "live": {
+        "api_process": {},
+        "gpu": {},
+        "host_system": {},
         "messages_processed": 0,
         "progress_pct": 100.0,
+        "simulation_process": {},
         "simulation_time": null,
         "wallclock_elapsed": null
       },
@@ -36,8 +40,12 @@
       "exit_code": 0,
       "finished_at": "2026-05-09T13:27:24.738993Z",
       "live": {
+        "api_process": {},
+        "gpu": {},
+        "host_system": {},
         "messages_processed": 0,
         "progress_pct": 100.0,
+        "simulation_process": {},
         "simulation_time": null,
         "wallclock_elapsed": null
       },
@@ -67,8 +75,12 @@
       "exit_code": 0,
       "finished_at": "2026-05-09T13:27:24.739272Z",
       "live": {
+        "api_process": {},
+        "gpu": {},
+        "host_system": {},
         "messages_processed": 0,
         "progress_pct": 100.0,
+        "simulation_process": {},
         "simulation_time": null,
         "wallclock_elapsed": null
       },
@@ -98,8 +110,12 @@
       "exit_code": 0,
       "finished_at": "2026-05-09T13:27:24.739464Z",
       "live": {
+        "api_process": {},
+        "gpu": {},
+        "host_system": {},
         "messages_processed": 0,
         "progress_pct": 100.0,
+        "simulation_process": {},
         "simulation_time": null,
         "wallclock_elapsed": null
       },
@@ -129,8 +145,12 @@
       "exit_code": 0,
       "finished_at": "2026-05-09T13:27:24.739585Z",
       "live": {
+        "api_process": {},
+        "gpu": {},
+        "host_system": {},
         "messages_processed": 0,
         "progress_pct": 100.0,
+        "simulation_process": {},
         "simulation_time": null,
         "wallclock_elapsed": null
       },
@@ -160,8 +180,12 @@
       "exit_code": 0,
       "finished_at": "2026-05-09T13:27:24.739764Z",
       "live": {
+        "api_process": {},
+        "gpu": {},
+        "host_system": {},
         "messages_processed": 0,
         "progress_pct": 100.0,
+        "simulation_process": {},
         "simulation_time": null,
         "wallclock_elapsed": null
       },
@@ -191,8 +215,12 @@
       "exit_code": 0,
       "finished_at": "2026-05-09T13:27:24.739940Z",
       "live": {
+        "api_process": {},
+        "gpu": {},
+        "host_system": {},
         "messages_processed": 0,
         "progress_pct": 100.0,
+        "simulation_process": {},
         "simulation_time": null,
         "wallclock_elapsed": null
       },
@@ -222,8 +250,12 @@
       "exit_code": 0,
       "finished_at": "2026-05-09T13:27:24.740062Z",
       "live": {
+        "api_process": {},
+        "gpu": {},
+        "host_system": {},
         "messages_processed": 0,
         "progress_pct": 100.0,
+        "simulation_process": {},
         "simulation_time": null,
         "wallclock_elapsed": null
       },
@@ -253,8 +285,12 @@
       "exit_code": 0,
       "finished_at": "2026-05-09T13:27:24.740244Z",
       "live": {
+        "api_process": {},
+        "gpu": {},
+        "host_system": {},
         "messages_processed": 0,
         "progress_pct": 100.0,
+        "simulation_process": {},
         "simulation_time": null,
         "wallclock_elapsed": null
       },
@@ -277,6 +313,192 @@
       "pid": null,
       "run_id": "run-20260509-111456",
       "started_at": "2026-05-09T13:27:24.740244Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:34:18.361110Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 0.0,
+          "memory_rss_mb": 33.96875,
+          "memory_vms_mb": 432049.390625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 4,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 40.3,
+          "ram_percent": 83.8,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.0385284423828125
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 0.0,
+          "memory_rss_mb": 202.71875,
+          "memory_vms_mb": 432097.625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 57.428541
+        },
+        "simulation_time": "2036-06-21 00:00:00.000000400",
+        "wallclock_elapsed": "0 days 00:00:54.847225"
+      },
+      "log_dir": "run-20260509-133320",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 2392251300,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 64256,
+      "run_id": "run-20260509-133320",
+      "started_at": "2026-05-09T13:33:20.754894Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:40:25.535136Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 0.0,
+          "memory_rss_mb": 33.09375,
+          "memory_vms_mb": 432084.390625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 4,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 35.6,
+          "ram_percent": 80.0,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.2187957763671875
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 0.0,
+          "memory_rss_mb": 205.46875,
+          "memory_vms_mb": 432101.46875,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 56.39673
+        },
+        "simulation_time": "2036-06-21 00:00:00.000000050",
+        "wallclock_elapsed": "0 days 00:00:54.394080"
+      },
+      "log_dir": "run-20260509-133928",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 2759757156,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 65386,
+      "run_id": "run-20260509-133928",
+      "started_at": "2026-05-09T13:39:28.264079Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-09T13:45:12.640767Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 0.11548446854865416,
+          "memory_rss_mb": 32.890625,
+          "memory_vms_mb": 432063.53125,
+          "open_files": 0,
+          "status": "running",
+          "threads": 4,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 28.3,
+          "ram_percent": 81.7,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.1424407958984375
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 99.46923138953525,
+          "memory_rss_mb": 158.609375,
+          "memory_vms_mb": 432089.25,
+          "open_files": 1,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 56.393155
+        },
+        "simulation_time": "2036-06-21 00:00:00.000001050",
+        "wallclock_elapsed": "0 days 00:00:55.280595"
+      },
+      "log_dir": "run-20260509-134414",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 3045950988,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 66395,
+      "run_id": "run-20260509-134414",
+      "started_at": "2026-05-09T13:44:14.454298Z",
       "status": "completed"
     }
   ]

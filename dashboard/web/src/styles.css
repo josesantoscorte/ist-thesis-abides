@@ -236,6 +236,32 @@ input {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.live-monitor-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.monitor-groups {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.monitor-box {
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 10px;
+  background: #0b0b0c;
+}
+
+.monitor-box h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #a1a1aa;
+}
+
 .kpi {
   background: #0b0b0c;
   border: 1px solid #27272a;
@@ -382,6 +408,10 @@ input {
   }
 
   .split-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .monitor-groups {
     grid-template-columns: 1fr;
   }
 

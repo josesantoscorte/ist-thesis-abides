@@ -8,6 +8,9 @@ log/
 results/
 util/crypto/datasets
 .venv/
+.pycache/
 .idea/
 .ipynb/
 .ipynb_checkpoints/
+node_modules/
+dashboard/web/dist/

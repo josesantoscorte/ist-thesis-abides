@@ -41,6 +41,23 @@ python3 -u cli/timeseries.py -l log/baseline
 
 Each run also writes `scenario_manifest.json` to its log directory for reproducibility.
 
+## Dashboard UI
+
+A modern web dashboard is available under `dashboard/` with:
+
+- simulation parameter configuration,
+- run controls (start/stop),
+- live progress monitoring,
+- KPI and chart-based results.
+
+See `dashboard/README.md` for setup/run instructions.
+
+Quick start from repository root:
+
+```bash
+./scripts/dashboard.sh
+```
+
 ## Notes
 
 - The project is now macro-only.

@@ -1,0 +1,415 @@
+import json
+import os
+import re
+import subprocess
+import sys
+import threading
+import time
+from collections import deque
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Deque, Dict, List, Optional
+
+import pandas as pd
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+LOG_ROOT = os.path.join(REPO_ROOT, "log")
+SIMULATION_START = pd.Timestamp("2035-01-01")
+
+PROGRESS_RE = re.compile(
+    r"Simulation time:\s*(.*?), messages processed:\s*(\d+), wallclock elapsed:\s*(.*?)(?:\s*---)?$"
+)
+
+
+class SimulationParams(BaseModel):
+    seed: Optional[int] = None
+    households: int = Field(default=120, ge=1, le=20000)
+    firms: int = Field(default=15, ge=1, le=5000)
+    months: int = Field(default=18, ge=1, le=120)
+    wake_hours: int = Field(default=24, ge=1, le=168)
+
+    automation_adoption_rate: float = Field(default=0.02, ge=0.0, le=1.0)
+    task_substitution_elasticity: float = Field(default=0.30, ge=0.0, le=3.0)
+    productivity_gain_factor: float = Field(default=0.45, ge=0.0, le=3.0)
+    labor_displacement_lag: int = Field(default=3, ge=1, le=24)
+
+    income_tax_rate: float = Field(default=0.18, ge=0.0, le=1.0)
+    unemployment_support: int = Field(default=9000, ge=0, le=1_000_000)
+    retraining_subsidy: float = Field(default=0.03, ge=0.0, le=1.0)
+    neutral_rate: float = Field(default=0.02, ge=-0.1, le=1.0)
+
+
+class StartSimulationRequest(BaseModel):
+    log_dir: Optional[str] = None
+    verbose: bool = False
+    params: SimulationParams = Field(default_factory=SimulationParams)
+
+
+@dataclass
+class LiveProgress:
+    simulation_time: Optional[str] = None
+    messages_processed: int = 0
+    wallclock_elapsed: Optional[str] = None
+    progress_pct: float = 0.0
+
+
+@dataclass
+class RunState:
+    run_id: str
+    params: Dict[str, Any]
+    log_dir: str
+    status: str = "running"
+    pid: Optional[int] = None
+    started_at: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    finished_at: Optional[str] = None
+    exit_code: Optional[int] = None
+    error: Optional[str] = None
+    live: LiveProgress = field(default_factory=LiveProgress)
+    lines: Deque[str] = field(default_factory=lambda: deque(maxlen=600))
+    process: Optional[subprocess.Popen] = None
+    lock: threading.Lock = field(default_factory=threading.Lock)
+
+    def as_dict(self) -> Dict[str, Any]:
+        with self.lock:
+            return {
+                "run_id": self.run_id,
+                "params": self.params,
+                "log_dir": self.log_dir,
+                "status": self.status,
+                "pid": self.pid,
+                "started_at": self.started_at,
+                "finished_at": self.finished_at,
+                "exit_code": self.exit_code,
+                "error": self.error,
+                "live": {
+                    "simulation_time": self.live.simulation_time,
+                    "messages_processed": self.live.messages_processed,
+                    "wallclock_elapsed": self.live.wallclock_elapsed,
+                    "progress_pct": self.live.progress_pct,
+                },
+                "recent_logs": list(self.lines),
+            }
+
+
+class SimulationManager:
+    def __init__(self) -> None:
+        self._runs: Dict[str, RunState] = {}
+        self._current_run_id: Optional[str] = None
+        self._manager_lock = threading.Lock()
+
+    def _derive_progress_pct(self, months: int, simulation_time: str) -> float:
+        try:
+            current = pd.Timestamp(simulation_time.strip())
+            stop = SIMULATION_START + pd.to_timedelta(f"{max(1, months * 30)} days")
+            total_seconds = max(1.0, (stop - SIMULATION_START).total_seconds())
+            elapsed_seconds = max(0.0, (current - SIMULATION_START).total_seconds())
+            return min(100.0, (elapsed_seconds / total_seconds) * 100.0)
+        except Exception:
+            return 0.0
+
+    def _reader_thread(self, run: RunState) -> None:
+        assert run.process is not None and run.process.stdout is not None
+
+        for raw_line in iter(run.process.stdout.readline, ""):
+            line = raw_line.rstrip("\n")
+            with run.lock:
+                run.lines.append(line)
+                match = PROGRESS_RE.search(line.strip())
+                if match:
+                    sim_time = match.group(1).strip()
+                    run.live.simulation_time = sim_time
+                    run.live.messages_processed = int(match.group(2))
+                    run.live.wallclock_elapsed = match.group(3).strip()
+                    run.live.progress_pct = self._derive_progress_pct(
+                        months=int(run.params.get("months", 18)),
+                        simulation_time=sim_time,
+                    )
+
+        code = run.process.wait()
+        with run.lock:
+            run.exit_code = code
+            run.finished_at = datetime.utcnow().isoformat() + "Z"
+            if run.status == "stopping":
+                run.status = "stopped"
+            elif code == 0:
+                run.status = "completed"
+                run.live.progress_pct = 100.0
+            else:
+                run.status = "failed"
+                run.error = f"Simulation exited with code {code}."
+
+        with self._manager_lock:
+            if self._current_run_id == run.run_id:
+                self._current_run_id = None
+
+    def start(self, request: StartSimulationRequest) -> Dict[str, Any]:
+        with self._manager_lock:
+            if self._current_run_id:
+                current = self._runs[self._current_run_id]
+                if current.status in {"running", "stopping"}:
+                    raise HTTPException(status_code=409, detail="A simulation is already running.")
+
+            now = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+            run_id = f"run-{now}"
+            log_dir = request.log_dir or run_id
+            params = request.params.model_dump()
+            seed = params.get("seed")
+            if seed is None:
+                seed = int(time.time() * 1_000_000) % (2**32 - 1)
+                params["seed"] = seed
+
+            command = [
+                sys.executable,
+                "-u",
+                "abides.py",
+                "-c",
+                "baseline",
+                "-l",
+                log_dir,
+                "-s",
+                str(seed),
+                "--households",
+                str(params["households"]),
+                "--firms",
+                str(params["firms"]),
+                "--months",
+                str(params["months"]),
+                "--wake_hours",
+                str(params["wake_hours"]),
+                "--automation_adoption_rate",
+                str(params["automation_adoption_rate"]),
+                "--task_substitution_elasticity",
+                str(params["task_substitution_elasticity"]),
+                "--productivity_gain_factor",
+                str(params["productivity_gain_factor"]),
+                "--labor_displacement_lag",
+                str(params["labor_displacement_lag"]),
+                "--income_tax_rate",
+                str(params["income_tax_rate"]),
+                "--unemployment_support",
+                str(params["unemployment_support"]),
+                "--retraining_subsidy",
+                str(params["retraining_subsidy"]),
+                "--neutral_rate",
+                str(params["neutral_rate"]),
+            ]
+            if request.verbose:
+                command.append("--verbose")
+
+            process = subprocess.Popen(
+                command,
+                cwd=REPO_ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+            )
+
+            run = RunState(run_id=run_id, params=params, log_dir=log_dir, process=process, pid=process.pid)
+            self._runs[run_id] = run
+            self._current_run_id = run_id
+
+            t = threading.Thread(target=self._reader_thread, args=(run,), daemon=True)
+            t.start()
+
+            return run.as_dict()
+
+    def get_current(self) -> Optional[Dict[str, Any]]:
+        with self._manager_lock:
+            if not self._current_run_id:
+                return None
+            return self._runs[self._current_run_id].as_dict()
+
+    def stop_current(self) -> Dict[str, Any]:
+        with self._manager_lock:
+            if not self._current_run_id:
+                raise HTTPException(status_code=404, detail="No active simulation run.")
+            run = self._runs[self._current_run_id]
+
+        with run.lock:
+            if run.process is None or run.status not in {"running", "stopping"}:
+                raise HTTPException(status_code=409, detail="Run is not active.")
+            run.status = "stopping"
+            run.process.terminate()
+            run.lines.append("Requested graceful stop from dashboard.")
+            return run.as_dict()
+
+    def list_runs(self) -> List[Dict[str, Any]]:
+        with self._manager_lock:
+            runs = list(self._runs.values())
+        runs.sort(key=lambda r: r.started_at, reverse=True)
+        return [r.as_dict() for r in runs]
+
+    def get_run(self, run_id: str) -> Dict[str, Any]:
+        with self._manager_lock:
+            if run_id not in self._runs:
+                raise HTTPException(status_code=404, detail="Run not found.")
+            return self._runs[run_id].as_dict()
+
+
+def _parse_summary_event(value: Any) -> Dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _build_stats(log_dir: str) -> Dict[str, Any]:
+    summary_path = os.path.join(log_dir, "summary_log.bz2")
+    if not os.path.exists(summary_path):
+        raise HTTPException(status_code=404, detail=f"Missing summary log in {log_dir}.")
+
+    summary = pd.read_pickle(summary_path, compression="bz2")
+
+    households = summary[summary["EventType"] == "HOUSEHOLD_FINAL_STATE"]["Event"].apply(_parse_summary_event)
+    firms = summary[summary["EventType"] == "FIRM_FINAL_STATE"]["Event"].apply(_parse_summary_event)
+    banks = summary[summary["EventType"] == "BANK_FINAL_STATE"]["Event"].apply(_parse_summary_event)
+    governments = summary[summary["EventType"] == "GOVERNMENT_FINAL_STATE"]["Event"].apply(_parse_summary_event)
+    rates = summary[summary["EventType"] == "POLICY_RATE_SET"]["Event"].apply(_parse_summary_event)
+
+    household_rows = [x for x in households if x]
+    firm_rows = [x for x in firms if x]
+    bank_rows = [x for x in banks if x]
+    gov_rows = [x for x in governments if x]
+    rate_rows = [x for x in rates if x]
+
+    total_households = len(household_rows)
+    unemployed = sum(1 for x in household_rows if x.get("is_unemployed", False))
+
+    stats: Dict[str, Any] = {
+        "households": total_households,
+        "unemployed_households": unemployed,
+        "unemployment_rate": (unemployed / float(total_households)) if total_households else 0.0,
+        "average_household_cash_cents": int(
+            sum(x.get("cash_cents", 0) for x in household_rows) / float(max(1, total_households))
+        ),
+        "total_firm_cash_cents": int(sum(x.get("cash_cents", 0) for x in firm_rows)),
+        "average_firm_automation_level": (
+            sum(x.get("automation_level", 0.0) for x in firm_rows) / float(max(1, len(firm_rows)))
+        ),
+        "active_loans_count": int(sum(x.get("active_loans", 0) for x in bank_rows)),
+        "government_budget_cents": int(gov_rows[-1].get("budget_cents", 0) if gov_rows else 0),
+        "final_policy_rate": float(rate_rows[-1].get("policy_rate", 0.0) if rate_rows else 0.0),
+    }
+
+    manifest_path = os.path.join(log_dir, "scenario_manifest.json")
+    if os.path.exists(manifest_path):
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            stats["scenario_manifest"] = json.load(f)
+
+    return stats
+
+
+def _build_timeseries(log_dir: str) -> List[Dict[str, Any]]:
+    TRACKED_EVENTS = {
+        "WAGE_PAYMENT_RECEIVED": "wages_paid_cents",
+        "GOODS_CONSUMED": "consumption_spend_cents",
+        "TRANSFER_RECEIVED": "transfers_cents",
+        "PRODUCTION": "production_units",
+    }
+
+    rows: List[Dict[str, Any]] = []
+
+    for filename in os.listdir(log_dir):
+        if not filename.endswith(".bz2"):
+            continue
+        if filename.startswith("summary_log") or filename.startswith("ORDERBOOK_"):
+            continue
+
+        path = os.path.join(log_dir, filename)
+        df = pd.read_pickle(path, compression="bz2")
+        if "EventType" not in df.columns or "Event" not in df.columns:
+            continue
+
+        tracked = df[df["EventType"].isin(TRACKED_EVENTS.keys())]
+        for ts, row in tracked.iterrows():
+            event_type = row["EventType"]
+            payload = row["Event"] if isinstance(row["Event"], dict) else {}
+            if event_type == "TRANSFER_RECEIVED" and not isinstance(row["Event"], dict):
+                payload = {"amount_cents": row["Event"]}
+
+            if event_type == "WAGE_PAYMENT_RECEIVED":
+                value = int(payload.get("gross_cents", 0))
+            elif event_type == "GOODS_CONSUMED":
+                value = int(payload.get("spent_cents", 0))
+            elif event_type == "TRANSFER_RECEIVED":
+                value = int(payload.get("amount_cents", 0))
+            elif event_type == "PRODUCTION":
+                value = int(payload.get("produced", 0))
+            else:
+                value = 0
+
+            rows.append({"timestamp": ts, "series": TRACKED_EVENTS[event_type], "value": value})
+
+    if not rows:
+        return []
+
+    out = pd.DataFrame(rows)
+    out = out.groupby(["timestamp", "series"], as_index=False)["value"].sum()
+    pivot = out.pivot(index="timestamp", columns="series", values="value").fillna(0).sort_index()
+    pivot.reset_index(inplace=True)
+    pivot["timestamp"] = pivot["timestamp"].astype(str)
+
+    return pivot.to_dict(orient="records")
+
+
+manager = SimulationManager()
+app = FastAPI(title="ABIDES Dashboard API", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/api/health")
+def health() -> Dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.get("/api/runs")
+def list_runs() -> Dict[str, Any]:
+    return {"runs": manager.list_runs()}
+
+
+@app.get("/api/runs/current")
+def current_run() -> Dict[str, Any]:
+    run = manager.get_current()
+    if not run:
+        return {"run": None}
+    return {"run": run}
+
+
+@app.post("/api/runs")
+def start_run(request: StartSimulationRequest) -> Dict[str, Any]:
+    run = manager.start(request)
+    return {"run": run}
+
+
+@app.post("/api/runs/current/stop")
+def stop_run() -> Dict[str, Any]:
+    run = manager.stop_current()
+    return {"run": run}
+
+
+@app.get("/api/runs/{run_id}")
+def get_run(run_id: str) -> Dict[str, Any]:
+    return {"run": manager.get_run(run_id)}
+
+
+@app.get("/api/runs/{run_id}/results")
+def get_run_results(run_id: str) -> Dict[str, Any]:
+    run = manager.get_run(run_id)
+    run_log_dir = os.path.join(LOG_ROOT, run["log_dir"])
+    if not os.path.exists(run_log_dir):
+        raise HTTPException(status_code=404, detail=f"Log directory does not exist: {run_log_dir}")
+
+    return {
+        "run_id": run_id,
+        "log_dir": run["log_dir"],
+        "stats": _build_stats(run_log_dir),
+        "timeseries": _build_timeseries(run_log_dir),
+    }

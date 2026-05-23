@@ -44,6 +44,12 @@ npm run dev
 
 Open `http://127.0.0.1:5173`.
 
+## Kernel telemetry (live graph)
+
+When you start a simulation from the dashboard, the API sets `ABIDES_TELEMETRY_N` from `telemetry_sample_n` on the start request (default **80**: one recorded `sendMessage` per 80 kernel enqueues). Each sample is appended as JSON to `log/<log_dir>/telemetry.jsonl` with numeric agent ids, `sender_type`, `recipient_type`, `family`, and `msg`. Lines are **flushed immediately** so the dashboard can read them while the run is in progress.
+
+The monitor polls `GET /api/runs/{run_id}/telemetry` and draws **one node per agent** (matching the baseline config registration order), coloring directed edges between sampled sender/recipient pairs by dominant message family. The graph uses a wide layout (institutions center-left, firms east, households along a bottom arc); **scroll/trackpad to zoom** and **drag to pan**, or use **Reset view**. Set `telemetry_sample_n` to **0** in the API payload to disable sampling and disk output.
+
 ## Capabilities
 
 - Define all baseline simulation parameters from the dashboard.

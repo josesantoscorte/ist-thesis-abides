@@ -1,4 +1,4 @@
-import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams } from "./types";
+import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams, TelemetryResponse } from "./types";
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
@@ -27,7 +27,12 @@ export async function getRuns(): Promise<RunState[]> {
 export async function startRun(params: SimulationParams): Promise<RunState> {
   const payload = await request<{ run: RunState }>("/runs", {
     method: "POST",
-    body: JSON.stringify({ params, verbose: false })
+    body: JSON.stringify({
+      params,
+      verbose: false,
+      // Dense enough for live colors while keeping JSONL small (must flush each line on backend).
+      telemetry_sample_n: 80
+    })
   });
   return payload.run;
 }
@@ -43,4 +48,9 @@ export async function getRunResults(runId: string): Promise<ResultsResponse> {
 
 export async function getMonitorSnapshot(): Promise<MonitorSnapshot> {
   return request<MonitorSnapshot>("/monitor");
+}
+
+export async function getRunTelemetry(runId: string, limit = 1500): Promise<TelemetryResponse> {
+  const q = new URLSearchParams({ limit: String(limit) });
+  return request<TelemetryResponse>(`/runs/${encodeURIComponent(runId)}/telemetry?${q}`);
 }

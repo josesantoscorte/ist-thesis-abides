@@ -11,8 +11,9 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import { getCurrentRun, getMonitorSnapshot, getRunResults, getRuns, startRun, stopCurrentRun } from "./api";
-import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams } from "./types";
+import { getCurrentRun, getMonitorSnapshot, getRunResults, getRunTelemetry, getRuns, startRun, stopCurrentRun } from "./api";
+import { LiveAgentGraph } from "./LiveAgentGraph";
+import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams, TelemetryEvent } from "./types";
 import "./styles.css";
 
 const defaultParams: SimulationParams = {
@@ -31,7 +32,15 @@ const defaultParams: SimulationParams = {
   neutral_rate: 0.02
 };
 
-const presetConfigs: Record<"baseline" | "high-automation" | "high-tax", SimulationParams> = {
+type PresetKey =
+  | "baseline"
+  | "high-automation"
+  | "high-tax"
+  | "stress-medium"
+  | "stress-high"
+  | "stress-extreme";
+
+const presetConfigs: Record<PresetKey, SimulationParams> = {
   baseline: defaultParams,
   "high-automation": {
     ...defaultParams,
@@ -46,6 +55,51 @@ const presetConfigs: Record<"baseline" | "high-automation" | "high-tax", Simulat
     unemployment_support: 14000,
     retraining_subsidy: 0.08,
     neutral_rate: 0.025
+  },
+  "stress-medium": {
+    ...defaultParams,
+    households: 1000,
+    firms: 120,
+    months: 24,
+    wake_hours: 2,
+    automation_adoption_rate: 0.06,
+    task_substitution_elasticity: 0.75,
+    productivity_gain_factor: 0.9,
+    labor_displacement_lag: 1,
+    income_tax_rate: 0.22,
+    unemployment_support: 11000,
+    retraining_subsidy: 0.06,
+    neutral_rate: 0.025
+  },
+  "stress-high": {
+    ...defaultParams,
+    households: 2500,
+    firms: 300,
+    months: 30,
+    wake_hours: 1,
+    automation_adoption_rate: 0.08,
+    task_substitution_elasticity: 1.0,
+    productivity_gain_factor: 1.2,
+    labor_displacement_lag: 1,
+    income_tax_rate: 0.24,
+    unemployment_support: 11500,
+    retraining_subsidy: 0.08,
+    neutral_rate: 0.028
+  },
+  "stress-extreme": {
+    ...defaultParams,
+    households: 5000,
+    firms: 600,
+    months: 36,
+    wake_hours: 1,
+    automation_adoption_rate: 0.1,
+    task_substitution_elasticity: 1.2,
+    productivity_gain_factor: 1.5,
+    labor_displacement_lag: 1,
+    income_tax_rate: 0.25,
+    unemployment_support: 12000,
+    retraining_subsidy: 0.1,
+    neutral_rate: 0.03
   }
 };
 
@@ -96,12 +150,13 @@ export default function App() {
   const [runs, setRuns] = useState<RunState[]>([]);
   const [results, setResults] = useState<ResultsResponse | null>(null);
   const [activeTab, setActiveTab] = useState<"monitor" | "results">("monitor");
-  const [selectedPreset, setSelectedPreset] = useState<"baseline" | "high-automation" | "high-tax">("baseline");
+  const [selectedPreset, setSelectedPreset] = useState<PresetKey>("baseline");
   const [chartRange, setChartRange] = useState<25 | 50 | 100>(50);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(() => {
     return window.localStorage.getItem("abides.selected.run");
   });
   const [monitor, setMonitor] = useState<MonitorSnapshot | null>(null);
+  const [telemetry, setTelemetry] = useState<TelemetryEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const previousRunStatus = useRef<RunState["status"] | null>(null);
@@ -134,6 +189,30 @@ export default function App() {
       window.clearInterval(id);
     };
   }, []);
+
+  useEffect(() => {
+    if (!run || (run.status !== "running" && run.status !== "stopping")) {
+      return;
+    }
+    let cancelled = false;
+    const rid = run.run_id;
+
+    const pollTelemetry = async () => {
+      try {
+        const tel = await getRunTelemetry(rid, 8000);
+        if (!cancelled) setTelemetry(tel.events);
+      } catch {
+        if (!cancelled) setTelemetry([]);
+      }
+    };
+
+    void pollTelemetry();
+    const id = window.setInterval(() => void pollTelemetry(), 550);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [run?.run_id, run?.status]);
 
   useEffect(() => {
     if (selectedRunId) {
@@ -212,7 +291,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run, runs]);
 
-  const applyPreset = (preset: "baseline" | "high-automation" | "high-tax") => {
+  const applyPreset = (preset: PresetKey) => {
     setSelectedPreset(preset);
     setParams({ ...presetConfigs[preset] });
   };
@@ -327,11 +406,14 @@ export default function App() {
               </span>
               <select
                 value={selectedPreset}
-                onChange={(e) => applyPreset(e.target.value as "baseline" | "high-automation" | "high-tax")}
+                onChange={(e) => applyPreset(e.target.value as PresetKey)}
               >
                 <option value="baseline">baseline</option>
                 <option value="high-automation">high-automation</option>
                 <option value="high-tax">high-tax</option>
+                <option value="stress-medium">stress-medium</option>
+                <option value="stress-high">stress-high</option>
+                <option value="stress-extreme">stress-extreme</option>
               </select>
             </label>
           </div>
@@ -346,7 +428,7 @@ export default function App() {
                 const limits = fieldLimits[key];
                 return (
                   <label key={String(key)}>
-                    <span>{String(key).replaceAll("_", " ")}</span>
+                    <span>{String(key).replace(/_/g, " ")}</span>
                     <input
                       type="number"
                       min={limits?.min}
@@ -432,11 +514,16 @@ export default function App() {
                   </div>
                   <small>{run.live.progress_pct.toFixed(1)}% complete</small>
 
+                  <LiveAgentGraph run={run} params={params} telemetry={telemetry} />
+
                   <h3 className="subsection">Recent Runtime Logs</h3>
                   <pre className="logs">{run.recent_logs.slice(-26).join("\n")}</pre>
                 </>
               ) : (
-                <p>No active run right now. Adjust parameters on the left and start a simulation.</p>
+                <>
+                  <p>No active run right now. Adjust parameters on the left and start a simulation.</p>
+                  <LiveAgentGraph run={null} params={params} telemetry={[]} />
+                </>
               )}
             </section>
           </section>

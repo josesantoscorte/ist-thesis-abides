@@ -500,6 +500,688 @@
       "run_id": "run-20260509-134414",
       "started_at": "2026-05-09T13:44:14.454298Z",
       "status": "completed"
+    },
+    {
+      "error": "Run was interrupted by dashboard restart.",
+      "exit_code": -1,
+      "finished_at": "2026-05-09T14:47:02.583625Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 0.08287974786359517,
+          "memory_rss_mb": 33.53125,
+          "memory_vms_mb": 432066.53125,
+          "open_files": 0,
+          "status": "running",
+          "threads": 4,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 26.2,
+          "ram_percent": 81.6,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.001617431640625
+        },
+        "messages_processed": 21500000,
+        "progress_pct": 0.21990740747974535,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 99.86711025533202,
+          "memory_rss_mb": 66.984375,
+          "memory_vms_mb": 432013.890625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 117.196323
+        },
+        "simulation_time": "2035-01-02 14:00:00.000045750",
+        "wallclock_elapsed": "0 days 00:01:57.443700"
+      },
+      "log_dir": "run-20260509-144425",
+      "params": {
+        "automation_adoption_rate": 0.06,
+        "firms": 120,
+        "households": 1000,
+        "income_tax_rate": 0.22,
+        "labor_displacement_lag": 1,
+        "months": 24,
+        "neutral_rate": 0.025,
+        "productivity_gain_factor": 0.9,
+        "retraining_subsidy": 0.06,
+        "seed": 2362379224,
+        "task_substitution_elasticity": 0.75,
+        "unemployment_support": 11000,
+        "wake_hours": 2
+      },
+      "pid": 67673,
+      "run_id": "run-20260509-144425",
+      "started_at": "2026-05-09T14:44:25.849965Z",
+      "status": "failed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-11T05:12:11.332346Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 0.1457615532271635,
+          "memory_rss_mb": 28.1875,
+          "memory_vms_mb": 432050.484375,
+          "open_files": 0,
+          "status": "running",
+          "threads": 4,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 32.7,
+          "ram_percent": 80.6,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.2510528564453125
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 98.30768526711478,
+          "memory_rss_mb": 199.84375,
+          "memory_vms_mb": 432102.015625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 57.216236
+        },
+        "simulation_time": "2036-06-21 00:00:00.000000150",
+        "wallclock_elapsed": "0 days 00:00:54.653916"
+      },
+      "log_dir": "run-20260511-051113",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 3331497923,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 84539,
+      "run_id": "run-20260511-051113",
+      "started_at": "2026-05-11T05:11:13.921822Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-15T06:03:51.073282Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 0.06320300259752132,
+          "memory_rss_mb": 28.96875,
+          "memory_vms_mb": 432056.546875,
+          "open_files": 0,
+          "status": "running",
+          "threads": 3,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 21.1,
+          "ram_percent": 80.8,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.016815185546875
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 99.7149160971263,
+          "memory_rss_mb": 150.765625,
+          "memory_vms_mb": 432048.40625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 40.46469
+        },
+        "simulation_time": "2036-06-21 00:00:00.000002050",
+        "wallclock_elapsed": "0 days 00:00:55.733603"
+      },
+      "log_dir": "run-20260515-060252",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 4137319302,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 29982,
+      "run_id": "run-20260515-060252",
+      "started_at": "2026-05-15T06:02:52.100850Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-15T06:16:43.143715Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 0.25773203502910247,
+          "memory_rss_mb": 28.296875,
+          "memory_vms_mb": 432092.640625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 40.6,
+          "ram_percent": 80.9,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.1085205078125
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 98.91253175076616,
+          "memory_rss_mb": 188.203125,
+          "memory_vms_mb": 432097.1875,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 58.790411
+        },
+        "simulation_time": "2036-06-21 00:00:00.000000500",
+        "wallclock_elapsed": "0 days 00:00:56.894965"
+      },
+      "log_dir": "run-20260515-061543",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 613792265,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 32265,
+      "run_id": "run-20260515-061543",
+      "started_at": "2026-05-15T06:15:43.535297Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-15T06:21:17.300788Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 2.493206344115135,
+          "memory_rss_mb": 39.75,
+          "memory_vms_mb": 432061.859375,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 46.3,
+          "ram_percent": 83.5,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.2339935302734375
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 99.37215047187561,
+          "memory_rss_mb": 189.390625,
+          "memory_vms_mb": 432101.8125,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 62.514628
+        },
+        "simulation_time": "2036-06-21 00:00:00.000000650",
+        "wallclock_elapsed": "0 days 00:00:59.694995"
+      },
+      "log_dir": "run-20260515-062014",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 884871872,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 33190,
+      "run_id": "run-20260515-062014",
+      "started_at": "2026-05-15T06:20:14.618755Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-15T06:25:50.148489Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 2.3561512204657618,
+          "memory_rss_mb": 41.8125,
+          "memory_vms_mb": 432081.28125,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 41.7,
+          "ram_percent": 82.5,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.1984710693359375
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 99.59640309614024,
+          "memory_rss_mb": 203.53125,
+          "memory_vms_mb": 432106.15625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 61.300847
+        },
+        "simulation_time": "2036-06-20 00:00:00.000007250",
+        "wallclock_elapsed": "0 days 00:00:58.420874"
+      },
+      "log_dir": "run-20260515-062448",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 1159056923,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 34131,
+      "run_id": "run-20260515-062448",
+      "started_at": "2026-05-15T06:24:48.798929Z",
+      "status": "completed"
+    },
+    {
+      "error": "Run was interrupted by dashboard restart.",
+      "exit_code": -1,
+      "finished_at": "2026-05-15T06:29:38.853460Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 3.221136928798094,
+          "memory_rss_mb": 38.25,
+          "memory_vms_mb": 432086.28125,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 32.6,
+          "ram_percent": 81.8,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.2431488037109375
+        },
+        "messages_processed": 26800000,
+        "progress_pct": 0.289351851877572,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 98.58393760957019,
+          "memory_rss_mb": 143.71875,
+          "memory_vms_mb": 432025.296875,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 161.877794
+        },
+        "simulation_time": "2035-01-03 02:00:00.000016300",
+        "wallclock_elapsed": "0 days 00:02:41.121821"
+      },
+      "log_dir": "run-20260515-062640",
+      "params": {
+        "automation_adoption_rate": 0.06,
+        "firms": 120,
+        "households": 1000,
+        "income_tax_rate": 0.22,
+        "labor_displacement_lag": 1,
+        "months": 24,
+        "neutral_rate": 0.025,
+        "productivity_gain_factor": 0.9,
+        "retraining_subsidy": 0.06,
+        "seed": 1270334185,
+        "task_substitution_elasticity": 0.75,
+        "unemployment_support": 11000,
+        "wake_hours": 2
+      },
+      "pid": 34428,
+      "run_id": "run-20260515-062640",
+      "started_at": "2026-05-15T06:26:40.077600Z",
+      "status": "failed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-15T06:30:50.634392Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 2.5987355864054558,
+          "memory_rss_mb": 81.890625,
+          "memory_vms_mb": 432089.671875,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 47.1,
+          "ram_percent": 83.9,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.1153717041015625
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 99.32715209208966,
+          "memory_rss_mb": 203.859375,
+          "memory_vms_mb": 432105.546875,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 61.288549
+        },
+        "simulation_time": "2036-06-21 00:00:00.000002300",
+        "wallclock_elapsed": "0 days 00:00:58.894136"
+      },
+      "log_dir": "run-20260515-062948",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 1459234211,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 35026,
+      "run_id": "run-20260515-062948",
+      "started_at": "2026-05-15T06:29:48.978471Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-22T09:20:07.815244Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 2.9748014606469013,
+          "memory_rss_mb": 71.046875,
+          "memory_vms_mb": 432063.34375,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 36.3,
+          "ram_percent": 85.5,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.098358154296875
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 99.70796594201623,
+          "memory_rss_mb": 201.828125,
+          "memory_vms_mb": 432098.03125,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 62.447591
+        },
+        "simulation_time": "2036-06-21 00:00:00.000001350",
+        "wallclock_elapsed": "0 days 00:00:59.225048"
+      },
+      "log_dir": "run-20260522-091905",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 2235060168,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 87644,
+      "run_id": "run-20260522-091905",
+      "started_at": "2026-05-22T09:19:05.126679Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-23T09:59:29.066358Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 6.820528547516057,
+          "memory_rss_mb": 86.71875,
+          "memory_vms_mb": 432095.890625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 37.0,
+          "ram_percent": 85.4,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.296295166015625
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 99.37133696153528,
+          "memory_rss_mb": 188.53125,
+          "memory_vms_mb": 432105.25,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 65.819505
+        },
+        "simulation_time": "2036-06-21 00:00:00.000002",
+        "wallclock_elapsed": "0 days 00:01:02.572373"
+      },
+      "log_dir": "run-20260523-095823",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 798632041,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 16927,
+      "run_id": "run-20260523-095823",
+      "started_at": "2026-05-23T09:58:23.009620Z",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "finished_at": "2026-05-23T10:00:58.183677Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 7.4777363509122114,
+          "memory_rss_mb": 38.09375,
+          "memory_vms_mb": 432097.890625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 45.0,
+          "ram_percent": 84.9,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.1126861572265625
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 98.55242339213778,
+          "memory_rss_mb": 188.109375,
+          "memory_vms_mb": 432101.390625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 64.257558
+        },
+        "simulation_time": "2036-06-21 00:00:00.000000900",
+        "wallclock_elapsed": "0 days 00:01:01.252315"
+      },
+      "log_dir": "run-20260523-095953",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 889430100,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 17805,
+      "run_id": "run-20260523-095953",
+      "started_at": "2026-05-23T09:59:53.810526Z",
+      "status": "completed"
     }
   ]
 }

@@ -5,6 +5,7 @@ import os, queue, sys
 from message.Message import MessageType
 
 from util.util import log_print
+from util.kernel_telemetry import append_send_message_sample
 
 
 class Kernel:
@@ -84,6 +85,11 @@ class Kernel:
       self.log_dir = log_dir
     else:
       self.log_dir = str(int(self.kernelWallClockStart.timestamp()))
+
+    # Optional dashboard telemetry: ABIDES_TELEMETRY_N > 0 samples 1/N sendMessage calls.
+    self._telemetry_n = int(os.environ.get("ABIDES_TELEMETRY_N", "0"))
+    self._telemetry_counter = 0
+    self._telemetry_repo_root = os.path.dirname(os.path.abspath(__file__))
 
     # The kernel maintains a current time for each agent to allow
     # simulation of per-agent computation delays.  The agent's time
@@ -386,8 +392,44 @@ class Kernel:
     # Finally drop the message in the queue with priority == delivery time.
     self.messages.put((deliverAt, (recipient, MessageType.MESSAGE, msg)))
 
+    try:
+      self._maybe_record_telemetry(sender, recipient, msg)
+    except Exception:
+      pass
+
     log_print ("Sent time: {}, current time {}, computation delay {}", sentTime, self.currentTime, self.agentComputationDelays[sender])
     log_print ("Message queued: {}", msg)
+
+
+
+  def _maybe_record_telemetry(self, sender, recipient, msg):
+    n = getattr(self, "_telemetry_n", 0)
+    if n <= 0:
+      return
+    agents = getattr(self, "agents", None)
+    if not agents or sender is None or recipient is None:
+      return
+    if sender < 0 or recipient < 0 or sender >= len(agents) or recipient >= len(agents):
+      return
+    self._telemetry_counter = getattr(self, "_telemetry_counter", 0) + 1
+    if self._telemetry_counter % n != 0:
+      return
+    log_dir = getattr(self, "log_dir", None)
+    if not log_dir:
+      return
+    repo_root = getattr(self, "_telemetry_repo_root", None) or os.path.dirname(os.path.abspath(__file__))
+    sender_type = getattr(agents[sender], "type", "UnknownAgent")
+    recipient_type = getattr(agents[recipient], "type", "UnknownAgent")
+    append_send_message_sample(
+        log_dir=log_dir,
+        repo_root=repo_root,
+        sim_time=self.currentTime,
+        sender=int(sender),
+        recipient=int(recipient),
+        sender_type=str(sender_type),
+        recipient_type=str(recipient_type),
+        msg_body=getattr(msg, "body", None),
+    )
 
 
 

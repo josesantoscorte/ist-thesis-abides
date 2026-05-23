@@ -53,6 +53,8 @@ class StartSimulationRequest(BaseModel):
     log_dir: Optional[str] = None
     verbose: bool = False
     params: SimulationParams = Field(default_factory=SimulationParams)
+    # Record one kernel sendMessage sample per N messages (0 disables). Written to log/<dir>/telemetry.jsonl
+    telemetry_sample_n: int = Field(default=80, ge=0, le=500_000)
 
 
 @dataclass
@@ -496,6 +498,10 @@ class SimulationManager:
             if request.verbose:
                 command.append("--verbose")
 
+            run_env = os.environ.copy()
+            if request.telemetry_sample_n > 0:
+                run_env["ABIDES_TELEMETRY_N"] = str(int(request.telemetry_sample_n))
+
             process = subprocess.Popen(
                 command,
                 cwd=REPO_ROOT,
@@ -503,6 +509,7 @@ class SimulationManager:
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
+                env=run_env,
             )
 
             run = RunState(run_id=run_id, params=params, log_dir=log_dir, process=process, pid=process.pid)
@@ -527,6 +534,13 @@ class SimulationManager:
             run = self._runs[self._current_run_id]
         self._refresh_live_metrics(run)
         return run.as_dict()
+
+    def get_current_run_meta(self) -> Optional[Dict[str, str]]:
+        with self._manager_lock:
+            if not self._current_run_id:
+                return None
+            run = self._runs[self._current_run_id]
+            return {"run_id": run.run_id, "log_dir": run.log_dir}
 
     def stop_current(self) -> Dict[str, Any]:
         with self._manager_lock:
@@ -663,6 +677,28 @@ def _build_timeseries(log_dir: str) -> List[Dict[str, Any]]:
     return pivot.to_dict(orient="records")
 
 
+def _read_telemetry_tail(log_dir: str, limit: int = 800) -> List[Dict[str, Any]]:
+    path = os.path.join(LOG_ROOT, log_dir, "telemetry.jsonl")
+    if not os.path.exists(path):
+        return []
+    rows: Deque[str] = deque(maxlen=max(1, limit))
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if line:
+                    rows.append(line)
+    except OSError:
+        return []
+    out: List[Dict[str, Any]] = []
+    for line in rows:
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return out
+
+
 manager = SimulationManager()
 app = FastAPI(title="ABIDES Dashboard API", version="1.0.0")
 app.add_middleware(
@@ -695,6 +731,22 @@ def current_run() -> Dict[str, Any]:
 @app.get("/api/monitor")
 def monitor() -> Dict[str, Any]:
     return manager.get_monitor_snapshot()
+
+
+@app.get("/api/runs/current/telemetry")
+def current_run_telemetry(limit: int = 800) -> Dict[str, Any]:
+    meta = manager.get_current_run_meta()
+    if not meta:
+        return {"run_id": None, "log_dir": None, "events": []}
+    events = _read_telemetry_tail(meta["log_dir"], limit=limit)
+    return {"run_id": meta["run_id"], "log_dir": meta["log_dir"], "events": events}
+
+
+@app.get("/api/runs/{run_id}/telemetry")
+def run_telemetry(run_id: str, limit: int = 800) -> Dict[str, Any]:
+    run = manager.get_run(run_id)
+    events = _read_telemetry_tail(run["log_dir"], limit=limit)
+    return {"run_id": run_id, "log_dir": run["log_dir"], "events": events}
 
 
 @app.post("/api/runs")

@@ -171,6 +171,7 @@ input {
 
 .workspace {
   padding: 0;
+  min-width: 0;
 }
 
 .workspace-top-left {
@@ -223,6 +224,7 @@ input {
   border: 1px solid #27272a;
   border-radius: 14px;
   padding: 16px;
+  min-width: 0;
 }
 
 .kpis {
@@ -387,6 +389,232 @@ input {
   border-radius: 10px;
   padding: 10px;
   background: #18181b;
+}
+
+.live-graph-wrap {
+  margin-top: 14px;
+  border: 1px solid rgba(63, 63, 70, 0.75);
+  border-radius: 12px;
+  background: #09090b;
+  overflow: visible;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.live-graph-inner {
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.live-graph-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.live-graph-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.live-graph-header h4 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #e4e4e7;
+}
+
+.live-graph-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #a78bfa, #38bdf8);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+}
+
+.live-graph-live {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #71717a;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid #3f3f46;
+  background: rgba(24, 24, 27, 0.85);
+}
+
+.live-graph-live--on {
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(22, 101, 52, 0.2);
+}
+
+.live-graph-meta {
+  font-size: 11px;
+  color: #71717a;
+  line-height: 1.35;
+}
+
+.live-graph-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1320 / 780;
+  max-height: min(62vh, 720px);
+  min-height: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(52, 52, 58, 0.85);
+  /* Fills the whole viewport; SVG graph may letterbox but background always tracks the box */
+  background-color: #050508;
+  background-image: radial-gradient(
+    ellipse 92% 88% at 50% 42%,
+    #13131a 0%,
+    #0c0c10 48%,
+    #050508 100%
+  );
+  touch-action: none;
+  flex-shrink: 0;
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.live-graph-viewport svg {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.live-graph-viewport-toolbar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.live-graph-viewport-toolbar button,
+.live-graph-viewport-toolbar .live-graph-zoom-hint {
+  pointer-events: auto;
+}
+
+.live-graph-reset-btn {
+  padding: 4px 11px;
+  font-size: 11px;
+  border-radius: 8px;
+  opacity: 0.92;
+}
+
+.live-graph-zoom-hint {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #a1a1aa;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #3f3f46;
+  background: rgba(12, 12, 16, 0.92);
+  backdrop-filter: blur(6px);
+}
+
+.live-graph-svg--network {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  display: block;
+}
+
+.live-graph-edge--data {
+  fill: none;
+  stroke-linecap: round;
+  animation: live-graph-dash 2.8s linear infinite;
+}
+
+@keyframes live-graph-dash {
+  to {
+    stroke-dashoffset: -64;
+  }
+}
+
+.live-graph-node-label {
+  fill: #f4f4f5;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.live-graph-node--bank .live-graph-node-label {
+  font-size: 11px;
+}
+
+.live-graph-node--government .live-graph-node-label,
+.live-graph-node--central_bank .live-graph-node-label {
+  font-size: 10px;
+}
+
+.live-graph-legend {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(39, 39, 42, 0.95);
+}
+
+.live-graph-legend-title {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #71717a;
+  margin-bottom: 6px;
+}
+
+.live-graph-legend-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.live-graph-legend-items li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #a1a1aa;
+}
+
+.live-graph-legend-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.live-graph-caption {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: #71717a;
+  line-height: 1.45;
 }
 
 @media (max-width: 1100px) {

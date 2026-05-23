@@ -84,6 +84,25 @@ export interface ResultsResponse {
   timeseries: Array<Record<string, string | number>>;
 }
 
+export type MessageFamily = "labor" | "credit" | "fiscal" | "monetary" | "policy" | "trade" | "unknown";
+
+/** One sampled kernel sendMessage (see log/<log_dir>/telemetry.jsonl). */
+export interface TelemetryEvent {
+  sim_time: string | null;
+  sender: number;
+  recipient: number;
+  sender_type: string;
+  recipient_type: string;
+  family: MessageFamily | string;
+  msg: string | null;
+}
+
+export interface TelemetryResponse {
+  run_id: string | null;
+  log_dir: string | null;
+  events: TelemetryEvent[];
+}
+
 export interface MonitorSnapshot {
   host_system?: {
     available?: boolean;

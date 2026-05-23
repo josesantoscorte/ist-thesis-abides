@@ -3,6 +3,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:27:24.738643Z",
       "live": {
         "api_process": {},
@@ -38,6 +40,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:27:24.738993Z",
       "live": {
         "api_process": {},
@@ -73,6 +77,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:27:24.739272Z",
       "live": {
         "api_process": {},
@@ -108,6 +114,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:27:24.739464Z",
       "live": {
         "api_process": {},
@@ -143,6 +151,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:27:24.739585Z",
       "live": {
         "api_process": {},
@@ -178,6 +188,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:27:24.739764Z",
       "live": {
         "api_process": {},
@@ -213,6 +225,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:27:24.739940Z",
       "live": {
         "api_process": {},
@@ -248,6 +262,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:27:24.740062Z",
       "live": {
         "api_process": {},
@@ -283,6 +299,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:27:24.740244Z",
       "live": {
         "api_process": {},
@@ -318,6 +336,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:34:18.361110Z",
       "live": {
         "api_process": {
@@ -380,6 +400,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:40:25.535136Z",
       "live": {
         "api_process": {
@@ -442,6 +464,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-09T13:45:12.640767Z",
       "live": {
         "api_process": {
@@ -504,6 +528,8 @@
     {
       "error": "Run was interrupted by dashboard restart.",
       "exit_code": -1,
+      "failure_detail": null,
+      "failure_reason": "dashboard_restart",
       "finished_at": "2026-05-09T14:47:02.583625Z",
       "live": {
         "api_process": {
@@ -566,6 +592,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-11T05:12:11.332346Z",
       "live": {
         "api_process": {
@@ -628,6 +656,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-15T06:03:51.073282Z",
       "live": {
         "api_process": {
@@ -690,6 +720,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-15T06:16:43.143715Z",
       "live": {
         "api_process": {
@@ -752,6 +784,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-15T06:21:17.300788Z",
       "live": {
         "api_process": {
@@ -814,6 +848,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-15T06:25:50.148489Z",
       "live": {
         "api_process": {
@@ -876,6 +912,8 @@
     {
       "error": "Run was interrupted by dashboard restart.",
       "exit_code": -1,
+      "failure_detail": null,
+      "failure_reason": "dashboard_restart",
       "finished_at": "2026-05-15T06:29:38.853460Z",
       "live": {
         "api_process": {
@@ -938,6 +976,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-15T06:30:50.634392Z",
       "live": {
         "api_process": {
@@ -1000,6 +1040,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-22T09:20:07.815244Z",
       "live": {
         "api_process": {
@@ -1062,6 +1104,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-23T09:59:29.066358Z",
       "live": {
         "api_process": {
@@ -1124,6 +1168,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-23T10:00:58.183677Z",
       "live": {
         "api_process": {
@@ -1186,6 +1232,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-23T10:09:35.234515Z",
       "live": {
         "api_process": {
@@ -1248,6 +1296,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-23T10:15:16.293297Z",
       "live": {
         "api_process": {
@@ -1310,6 +1360,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-23T10:30:31.896632Z",
       "live": {
         "api_process": {
@@ -1372,6 +1424,8 @@
     {
       "error": null,
       "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
       "finished_at": "2026-05-23T10:58:16.883079Z",
       "live": {
         "api_process": {
@@ -1434,6 +1488,8 @@
     {
       "error": "Run was interrupted by dashboard restart.",
       "exit_code": -1,
+      "failure_detail": null,
+      "failure_reason": "dashboard_restart",
       "finished_at": "2026-05-23T11:13:55.011332Z",
       "live": {
         "api_process": {
@@ -1496,6 +1552,8 @@
     {
       "error": "Simulation stopped from dashboard.",
       "exit_code": -15,
+      "failure_detail": null,
+      "failure_reason": "user_stopped",
       "finished_at": "2026-05-23T11:14:14.462785Z",
       "live": {
         "api_process": {
@@ -1553,7 +1611,71 @@
       "pid": null,
       "run_id": "run-20260523-111404",
       "started_at": "2026-05-23T11:14:04.538623Z",
-      "status": "failed"
+      "status": "stopped"
+    },
+    {
+      "error": null,
+      "exit_code": 0,
+      "failure_detail": null,
+      "failure_reason": null,
+      "finished_at": "2026-05-23T11:37:17.178534Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 2.715305209290985,
+          "memory_rss_mb": 89.1875,
+          "memory_vms_mb": 432033.875,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 44.6,
+          "ram_percent": 84.1,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.3038787841796875
+        },
+        "messages_processed": 11100000,
+        "progress_pct": 100.0,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 98.33018940947841,
+          "memory_rss_mb": 203.84375,
+          "memory_vms_mb": 432105.875,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 61.606175
+        },
+        "simulation_time": "2036-06-20 00:00:00.000006900",
+        "wallclock_elapsed": "0 days 00:00:58.946893"
+      },
+      "log_dir": "run-20260523-113615",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 2375855227,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": 71879,
+      "run_id": "run-20260523-113615",
+      "started_at": "2026-05-23T11:36:15.200790Z",
+      "status": "completed"
     }
   ]
 }

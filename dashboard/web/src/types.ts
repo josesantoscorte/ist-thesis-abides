@@ -1,5 +1,15 @@
 export type RunStatus = "running" | "stopping" | "stopped" | "completed" | "failed";
 
+/** Why a run ended without completing successfully (null when completed). */
+export type FailureReason =
+  | "user_stopped"
+  | "dashboard_restart"
+  | "process_error"
+  | "signal_killed"
+  | "signal_terminated"
+  | "start_failed"
+  | "unknown";
+
 export interface SimulationParams {
   seed: number | null;
   households: number;
@@ -73,6 +83,8 @@ export interface RunState {
   finished_at: string | null;
   exit_code: number | null;
   error: string | null;
+  failure_reason?: FailureReason | null;
+  failure_detail?: string | null;
   live: LiveState;
   recent_logs: string[];
 }

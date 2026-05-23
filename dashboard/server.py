@@ -30,6 +30,18 @@ PROGRESS_RE = re.compile(
     r"Simulation time:\s*(.*?), messages processed:\s*(\d+), wallclock elapsed:\s*(.*?)(?:\s*---)?$"
 )
 
+FAILURE_REASONS = frozenset(
+    {
+        "user_stopped",
+        "dashboard_restart",
+        "process_error",
+        "signal_killed",
+        "signal_terminated",
+        "start_failed",
+        "unknown",
+    }
+)
+
 
 class SimulationParams(BaseModel):
     seed: Optional[int] = None
@@ -80,6 +92,8 @@ class RunState:
     finished_at: Optional[str] = None
     exit_code: Optional[int] = None
     error: Optional[str] = None
+    failure_reason: Optional[str] = None
+    failure_detail: Optional[str] = None
     live: LiveProgress = field(default_factory=LiveProgress)
     lines: Deque[str] = field(default_factory=lambda: deque(maxlen=600))
     process: Optional[subprocess.Popen] = None
@@ -97,6 +111,8 @@ class RunState:
                 "finished_at": self.finished_at,
                 "exit_code": self.exit_code,
                 "error": self.error,
+                "failure_reason": self.failure_reason,
+                "failure_detail": self.failure_detail,
                 "live": {
                     "simulation_time": self.live.simulation_time,
                     "messages_processed": self.live.messages_processed,
@@ -109,6 +125,53 @@ class RunState:
                 },
                 "recent_logs": list(self.lines),
             }
+
+
+def _classify_exit_code(code: Optional[int]) -> Optional[str]:
+    if code is None or code == 0:
+        return None
+    if code in {137, -9, 9}:
+        return "signal_killed"
+    if code in {-15, 15, -2, 2}:
+        return "signal_terminated"
+    return "process_error"
+
+
+def _extract_failure_detail(lines: Deque[str]) -> Optional[str]:
+    keywords = ("error", "exception", "traceback", "failed", "killed", "fatal")
+    for line in reversed(lines):
+        lower = line.lower()
+        if any(keyword in lower for keyword in keywords):
+            return line.strip()[:500]
+    if lines:
+        return str(lines[-1]).strip()[:500]
+    return None
+
+
+def _infer_failure_fields(run: "RunState") -> None:
+    if run.status == "completed":
+        run.failure_reason = None
+        run.failure_detail = None
+        return
+    if run.failure_reason in FAILURE_REASONS:
+        if run.failure_reason == "user_stopped" and run.status == "failed":
+            run.status = "stopped"
+        return
+
+    err = (run.error or "").lower()
+    if "stopped from dashboard" in err or "requested stop" in err:
+        run.failure_reason = "user_stopped"
+        run.status = "stopped"
+        return
+    if "interrupted by dashboard restart" in err:
+        run.failure_reason = "dashboard_restart"
+        return
+    if run.status == "stopped":
+        run.failure_reason = "user_stopped"
+        return
+
+    classified = _classify_exit_code(run.exit_code)
+    run.failure_reason = classified or "unknown"
 
 
 class SimulationManager:
@@ -137,6 +200,8 @@ class SimulationManager:
             "finished_at": run.finished_at,
             "exit_code": run.exit_code,
             "error": run.error,
+            "failure_reason": run.failure_reason,
+            "failure_detail": run.failure_detail,
             "live": {
                 "simulation_time": run.live.simulation_time,
                 "messages_processed": run.live.messages_processed,
@@ -178,6 +243,8 @@ class SimulationManager:
                 finished_at=item.get("finished_at"),
                 exit_code=item.get("exit_code"),
                 error=item.get("error"),
+                failure_reason=item.get("failure_reason"),
+                failure_detail=item.get("failure_detail"),
             )
             live = item.get("live", {})
             run.live = LiveProgress(
@@ -194,10 +261,16 @@ class SimulationManager:
             if run.run_id:
                 if run.status in {"running", "stopping"}:
                     run.status = "failed"
+                    run.failure_reason = "dashboard_restart"
                     run.error = "Run was interrupted by dashboard restart."
                     run.finished_at = run.finished_at or datetime.utcnow().isoformat() + "Z"
                     run.exit_code = run.exit_code if run.exit_code is not None else -1
+                else:
+                    _infer_failure_fields(run)
                 self._runs[run.run_id] = run
+
+        if self._runs:
+            self._persist_runs()
 
     def _discover_runs_from_logs(self) -> None:
         if not os.path.isdir(LOG_ROOT):
@@ -453,14 +526,19 @@ class SimulationManager:
             if run.finished_at is None:
                 run.exit_code = code
                 run.finished_at = datetime.utcnow().isoformat() + "Z"
-                if run.status == "stopping":
-                    run.status = "failed"
+                if run.status in {"stopping", "stopped"} or run.failure_reason == "user_stopped":
+                    run.status = "stopped"
+                    run.failure_reason = "user_stopped"
                     run.error = run.error or "Simulation stopped from dashboard."
                 elif code == 0:
                     run.status = "completed"
+                    run.failure_reason = None
+                    run.failure_detail = None
                     run.live.progress_pct = 100.0
                 else:
                     run.status = "failed"
+                    run.failure_reason = _classify_exit_code(code) or "process_error"
+                    run.failure_detail = _extract_failure_detail(run.lines)
                     run.error = run.error or f"Simulation exited with code {code}."
             run.process = None
 
@@ -579,15 +657,18 @@ class SimulationManager:
             if run.process is None or run.status not in {"running", "stopping"}:
                 raise HTTPException(status_code=409, detail="Run is not active.")
             process = run.process
-            run.status = "failed"
+            run.status = "stopping"
+            run.failure_reason = "user_stopped"
             run.error = "Simulation stopped from dashboard."
             run.lines.append("Requested stop from dashboard.")
 
-        exit_code = self._terminate_process(process) if process is not None else -1
+        exit_code = self._terminate_process(process) if process is not None else -15
 
         with run.lock:
             run.exit_code = exit_code
             run.finished_at = datetime.utcnow().isoformat() + "Z"
+            run.status = "stopped"
+            run.failure_reason = "user_stopped"
             run.process = None
             run.pid = None
 

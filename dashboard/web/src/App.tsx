@@ -13,6 +13,11 @@ import {
 } from "recharts";
 import { getCurrentRun, getMonitorSnapshot, getRunResults, getRunTelemetry, getRuns, startRun, stopCurrentRun } from "./api";
 import { LiveAgentGraph } from "./LiveAgentGraph";
+import { RunHistoryItem } from "./RunHistoryItem";
+import { RunOutcomePanel } from "./RunOutcomePanel";
+import { isNonSuccessRun } from "./runOutcome";
+import { formatMessageCount } from "./runDisplayName";
+import { RunTitle } from "./RunTitle";
 import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams, TelemetryEvent } from "./types";
 import { Activity, BarChart3, Cpu, Gauge, Layers, Play, SlidersHorizontal, Square, UiIcon } from "./ui/icons";
 import "./styles.css";
@@ -320,12 +325,13 @@ export default function App() {
       const ended = await stopCurrentRun();
       setRun(null);
       setTelemetry([]);
-      setRuns((prev) => [ended, ...prev.filter((entry) => entry.run_id !== ended.run_id)]);
+      const nextRuns = [ended, ...runs.filter((entry) => entry.run_id !== ended.run_id)];
+      setRuns(nextRuns);
       previousRunId.current = activeRunId ?? ended.run_id;
       previousRunStatus.current = "running";
       setActiveTab("results");
       setSelectedRunId(ended.run_id);
-      await loadResults(ended.run_id);
+      await loadResults(ended.run_id, nextRuns);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -333,19 +339,30 @@ export default function App() {
     }
   };
 
-  const loadResults = async (runId: string) => {
+  const loadResults = async (runId: string, runList: RunState[] = runs) => {
     setLoading(true);
     setError(null);
+    const meta = runList.find((entry) => entry.run_id === runId);
     try {
       const response = await getRunResults(runId);
       setResults(response);
       setSelectedRunId(runId);
     } catch (e) {
-      setError((e as Error).message);
+      if (meta && isNonSuccessRun(meta)) {
+        setResults(null);
+        setSelectedRunId(runId);
+      } else {
+        setError((e as Error).message);
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const selectedRun = useMemo(
+    () => runs.find((entry) => entry.run_id === selectedRunId) ?? null,
+    [runs, selectedRunId]
+  );
 
   const metrics = useMemo(() => {
     const stats = results?.stats ?? {};
@@ -515,7 +532,7 @@ export default function App() {
                     </div>
                     <div className="kpi">
                       <strong>Messages</strong>
-                      <span>{run.live.messages_processed.toLocaleString()}</span>
+                      <span>{formatMessageCount(run.live.messages_processed)}</span>
                     </div>
                     <div className="kpi">
                       <strong>Simulation Time</strong>
@@ -551,24 +568,31 @@ export default function App() {
               <p>Select any run to load metrics and charts.</p>
               <div className="history">
                 {runs.slice(0, 20).map((item) => (
-                  <button
+                  <RunHistoryItem
                     key={item.run_id}
-                    className={selectedRunId === item.run_id ? "history-item selected" : "history-item"}
-                    onClick={() => void loadResults(item.run_id)}
+                    run={item}
+                    selected={selectedRunId === item.run_id}
                     disabled={loading}
-                  >
-                    <span>{item.run_id}</span>
-                    <span>{item.status}</span>
-                  </button>
+                    onSelect={() => void loadResults(item.run_id)}
+                  />
                 ))}
               </div>
             </div>
 
             <div className="panel results-panel">
               <h3>Results</h3>
-              {results ? (
+              {selectedRun && isNonSuccessRun(selectedRun) && !results ? (
                 <>
-                  <p>Loaded run: {results.run_id}</p>
+                  <p className="results-run-label">
+                    <RunTitle runId={selectedRun.run_id} showTechnicalId />
+                  </p>
+                  <RunOutcomePanel run={selectedRun} />
+                </>
+              ) : results ? (
+                <>
+                  <p className="results-run-label">
+                    <RunTitle runId={results.run_id} showTechnicalId />
+                  </p>
                   <div className="kpis">
                     <div className="kpi">
                       <strong>Unemployment</strong>

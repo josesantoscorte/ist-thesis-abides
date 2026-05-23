@@ -1432,9 +1432,9 @@
       "status": "completed"
     },
     {
-      "error": null,
-      "exit_code": null,
-      "finished_at": null,
+      "error": "Run was interrupted by dashboard restart.",
+      "exit_code": -1,
+      "finished_at": "2026-05-23T11:13:55.011332Z",
       "live": {
         "api_process": {
           "available": true,
@@ -1491,7 +1491,69 @@
       "pid": 54260,
       "run_id": "run-20260523-110543",
       "started_at": "2026-05-23T11:05:43.573519Z",
-      "status": "stopping"
+      "status": "failed"
+    },
+    {
+      "error": "Simulation stopped from dashboard.",
+      "exit_code": -15,
+      "finished_at": "2026-05-23T11:14:14.462785Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 1.854651562338103,
+          "memory_rss_mb": 44.515625,
+          "memory_vms_mb": 432136.9375,
+          "open_files": 0,
+          "status": "running",
+          "threads": 6,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 55.5,
+          "ram_percent": 83.2,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.39312744140625
+        },
+        "messages_processed": 1200000,
+        "progress_pct": 10.92592592592807,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 76.0837611592428,
+          "memory_rss_mb": 42.640625,
+          "memory_vms_mb": 431980.0,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 9.781262
+        },
+        "simulation_time": "2035-03-01 00:00:00.000001900",
+        "wallclock_elapsed": "0 days 00:00:08.765971"
+      },
+      "log_dir": "run-20260523-111404",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.18,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.03,
+        "seed": 1045192425,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260523-111404",
+      "started_at": "2026-05-23T11:14:04.538623Z",
+      "status": "failed"
     }
   ]
 }

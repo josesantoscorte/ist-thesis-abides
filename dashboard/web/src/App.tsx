@@ -313,11 +313,19 @@ export default function App() {
   };
 
   const stop = async () => {
+    const activeRunId = run?.run_id ?? null;
     setLoading(true);
     setError(null);
     try {
-      const stopped = await stopCurrentRun();
-      setRun(stopped);
+      const ended = await stopCurrentRun();
+      setRun(null);
+      setTelemetry([]);
+      setRuns((prev) => [ended, ...prev.filter((entry) => entry.run_id !== ended.run_id)]);
+      previousRunId.current = activeRunId ?? ended.run_id;
+      previousRunStatus.current = "running";
+      setActiveTab("results");
+      setSelectedRunId(ended.run_id);
+      await loadResults(ended.run_id);
     } catch (e) {
       setError((e as Error).message);
     } finally {

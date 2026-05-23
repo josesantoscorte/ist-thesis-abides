@@ -398,6 +398,24 @@ class SimulationManager:
         }
         return snapshot
 
+    def _clear_current_run_if(self, run_id: str) -> None:
+        with self._manager_lock:
+            if self._current_run_id == run_id:
+                self._current_run_id = None
+
+    def _terminate_process(self, process: subprocess.Popen, timeout_s: float = 8.0) -> int:
+        if process.poll() is not None:
+            return int(process.returncode or 0)
+        process.terminate()
+        try:
+            return int(process.wait(timeout=timeout_s))
+        except subprocess.TimeoutExpired:
+            process.kill()
+            try:
+                return int(process.wait(timeout=5))
+            except subprocess.TimeoutExpired:
+                return -1
+
     def _derive_progress_pct(self, months: int, simulation_time: str) -> float:
         try:
             current = pd.Timestamp(simulation_time.strip())
@@ -410,8 +428,9 @@ class SimulationManager:
 
     def _reader_thread(self, run: RunState) -> None:
         assert run.process is not None and run.process.stdout is not None
+        proc = run.process
 
-        for raw_line in iter(run.process.stdout.readline, ""):
+        for raw_line in iter(proc.stdout.readline, ""):
             line = raw_line.rstrip("\n")
             with run.lock:
                 run.lines.append(line)
@@ -426,22 +445,26 @@ class SimulationManager:
                         simulation_time=sim_time,
                     )
 
-        code = run.process.wait()
-        with run.lock:
-            run.exit_code = code
-            run.finished_at = datetime.utcnow().isoformat() + "Z"
-            if run.status == "stopping":
-                run.status = "stopped"
-            elif code == 0:
-                run.status = "completed"
-                run.live.progress_pct = 100.0
-            else:
-                run.status = "failed"
-                run.error = f"Simulation exited with code {code}."
+        code = proc.poll()
+        if code is None:
+            code = self._terminate_process(proc)
 
-        with self._manager_lock:
-            if self._current_run_id == run.run_id:
-                self._current_run_id = None
+        with run.lock:
+            if run.finished_at is None:
+                run.exit_code = code
+                run.finished_at = datetime.utcnow().isoformat() + "Z"
+                if run.status == "stopping":
+                    run.status = "failed"
+                    run.error = run.error or "Simulation stopped from dashboard."
+                elif code == 0:
+                    run.status = "completed"
+                    run.live.progress_pct = 100.0
+                else:
+                    run.status = "failed"
+                    run.error = run.error or f"Simulation exited with code {code}."
+            run.process = None
+
+        self._clear_current_run_if(run.run_id)
         self._persist_runs()
 
     def start(self, request: StartSimulationRequest) -> Dict[str, Any]:
@@ -532,6 +555,9 @@ class SimulationManager:
             if not self._current_run_id:
                 return None
             run = self._runs[self._current_run_id]
+            if run.status not in {"running", "stopping"}:
+                self._current_run_id = None
+                return None
         self._refresh_live_metrics(run)
         return run.as_dict()
 
@@ -548,14 +574,26 @@ class SimulationManager:
                 raise HTTPException(status_code=404, detail="No active simulation run.")
             run = self._runs[self._current_run_id]
 
+        process: Optional[subprocess.Popen] = None
         with run.lock:
             if run.process is None or run.status not in {"running", "stopping"}:
                 raise HTTPException(status_code=409, detail="Run is not active.")
-            run.status = "stopping"
-            run.process.terminate()
-            run.lines.append("Requested graceful stop from dashboard.")
-            self._persist_runs()
-            return run.as_dict()
+            process = run.process
+            run.status = "failed"
+            run.error = "Simulation stopped from dashboard."
+            run.lines.append("Requested stop from dashboard.")
+
+        exit_code = self._terminate_process(process) if process is not None else -1
+
+        with run.lock:
+            run.exit_code = exit_code
+            run.finished_at = datetime.utcnow().isoformat() + "Z"
+            run.process = None
+            run.pid = None
+
+        self._clear_current_run_if(run.run_id)
+        self._persist_runs()
+        return run.as_dict()
 
     def list_runs(self) -> List[Dict[str, Any]]:
         self._discover_runs_from_logs()

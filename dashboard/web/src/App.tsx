@@ -427,63 +427,65 @@ export default function App() {
         </div>
       </header>
 
-      <div className="app-shell">
-        <aside className="sidebar">
-          <div className="preset-row">
-            <label>
-              <span>
-                <UiIcon icon={Layers} />
-                Preset
-              </span>
-              <select
-                value={selectedPreset}
-                onChange={(e) => applyPreset(e.target.value as PresetKey)}
-              >
-                <option value="baseline">baseline</option>
-                <option value="high-automation">high-automation</option>
-                <option value="high-tax">high-tax</option>
-                <option value="stress-medium">stress-medium</option>
-                <option value="stress-high">stress-high</option>
-                <option value="stress-extreme">stress-extreme</option>
-              </select>
-            </label>
-          </div>
-
-          <div className="parameter-scroll">
-            <h2>
-              <UiIcon icon={SlidersHorizontal} />
-              Parameters
-            </h2>
-            <div className="parameter-grid">
-              {paramKeys.map((key) => {
-                const value = params[key];
-                const limits = fieldLimits[key];
-                return (
-                  <label key={String(key)}>
-                    <span>{String(key).replace(/_/g, " ")}</span>
-                    <input
-                      type="number"
-                      min={limits?.min}
-                      max={limits?.max}
-                      step={typeof value === "number" && Math.abs(value) < 1 ? "0.01" : "1"}
-                      value={value ?? ""}
-                      placeholder={limits ? `${limits.min} - ${limits.max}` : undefined}
-                      onChange={(e) => {
-                        const raw = e.target.value.trim();
-                        const parsed = raw === "" ? null : Number(raw);
-                        const nextValue = Number.isNaN(parsed) ? value : parsed;
-                        setParams((prev) => ({
-                          ...prev,
-                          [key]: nextValue as SimulationParams[typeof key]
-                        }));
-                      }}
-                    />
-                  </label>
-                );
-              })}
+      <div className={activeTab === "monitor" ? "app-shell" : "app-shell app-shell--full"}>
+        {activeTab === "monitor" && (
+          <aside className="sidebar">
+            <div className="preset-row">
+              <label>
+                <span>
+                  <UiIcon icon={Layers} />
+                  Preset
+                </span>
+                <select
+                  value={selectedPreset}
+                  onChange={(e) => applyPreset(e.target.value as PresetKey)}
+                >
+                  <option value="baseline">baseline</option>
+                  <option value="high-automation">high-automation</option>
+                  <option value="high-tax">high-tax</option>
+                  <option value="stress-medium">stress-medium</option>
+                  <option value="stress-high">stress-high</option>
+                  <option value="stress-extreme">stress-extreme</option>
+                </select>
+              </label>
             </div>
-          </div>
-        </aside>
+
+            <div className="parameter-scroll">
+              <h2>
+                <UiIcon icon={SlidersHorizontal} />
+                Parameters
+              </h2>
+              <div className="parameter-grid">
+                {paramKeys.map((key) => {
+                  const value = params[key];
+                  const limits = fieldLimits[key];
+                  return (
+                    <label key={String(key)}>
+                      <span>{String(key).replace(/_/g, " ")}</span>
+                      <input
+                        type="number"
+                        min={limits?.min}
+                        max={limits?.max}
+                        step={typeof value === "number" && Math.abs(value) < 1 ? "0.01" : "1"}
+                        value={value ?? ""}
+                        placeholder={limits ? `${limits.min} - ${limits.max}` : undefined}
+                        onChange={(e) => {
+                          const raw = e.target.value.trim();
+                          const parsed = raw === "" ? null : Number(raw);
+                          const nextValue = Number.isNaN(parsed) ? value : parsed;
+                          setParams((prev) => ({
+                            ...prev,
+                            [key]: nextValue as SimulationParams[typeof key]
+                          }));
+                        }}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </aside>
+        )}
 
         <main className="workspace">
           {activeTab === "monitor" ? (

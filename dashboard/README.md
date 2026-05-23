@@ -15,6 +15,8 @@ cd dashboard/web
 npm install
 ```
 
+Icons use [Lucide](https://lucide.dev/icons) via `lucide-react` (minimal stroke set). To swap an icon, edit `dashboard/web/src/ui/icons.tsx` and pick any name from the Lucide catalog.
+
 ## 3) Launch as a single application (recommended)
 
 From repo root:
@@ -48,7 +50,7 @@ Open `http://127.0.0.1:5173`.
 
 When you start a simulation from the dashboard, the API sets `ABIDES_TELEMETRY_N` from `telemetry_sample_n` on the start request (default **80**: one recorded `sendMessage` per 80 kernel enqueues). Each sample is appended as JSON to `log/<log_dir>/telemetry.jsonl` with numeric agent ids, `sender_type`, `recipient_type`, `family`, and `msg`. Lines are **flushed immediately** so the dashboard can read them while the run is in progress.
 
-The monitor polls `GET /api/runs/{run_id}/telemetry` and draws **one node per agent** (matching the baseline config registration order), coloring directed edges between sampled sender/recipient pairs by dominant message family. The graph uses a wide layout (institutions center-left, firms east, households along a bottom arc); **scroll/trackpad to zoom** and **drag to pan**, or use **Reset view**. Set `telemetry_sample_n` to **0** in the API payload to disable sampling and disk output.
+The monitor polls `GET /api/runs/{run_id}/telemetry` and draws **one node per agent** (matching the baseline config registration order), coloring directed edges between sampled sender/recipient pairs by dominant message family. Node positions use a **hybrid force-directed layout** ([d3-force](https://github.com/d3/d3-force)) computed **once from simulation parameters** (structural baseline graph — positions do not change during a run). Gov/CB/Bank are pinned; firms and households spread with link forces, repulsion, and collision, then the layout is scaled to fill the panel. **Scroll/trackpad to zoom**, **drag to pan**, **Reset view**, or **Fullscreen** (graph panel only). Edge colors still follow live telemetry. Set `telemetry_sample_n` to **0** in the API payload to disable sampling and disk output.
 
 ## Capabilities
 

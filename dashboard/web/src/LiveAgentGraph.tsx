@@ -1,5 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { computeAgentLayout, type AgentKind } from "./graphLayout";
 import type { RunState, SimulationParams, TelemetryEvent } from "./types";
+import { Maximize2, Minimize2, Network, RotateCcw, UiIcon } from "./ui/icons";
 
 type Props = {
   run: RunState | null;
@@ -7,110 +9,8 @@ type Props = {
   telemetry: TelemetryEvent[];
 };
 
-type AgentKind = "government" | "central_bank" | "bank" | "firm" | "household";
-
-type AgentLayout = {
-  id: number;
-  kind: AgentKind;
-  x: number;
-  y: number;
-  r: number;
-  shortLabel: string;
-};
-
-/** Scene size (SVG user space). Wider canvas leaves room for peripheral rings + zoom. */
+/** Scene size (SVG user space). */
 const LIVE_GRAPH_VB = { w: 1320, h: 780 };
-
-/** Matches config/baseline.py registration order. */
-function buildAgentLayout(params: SimulationParams): AgentLayout[] {
-  let id = 0;
-  const govId = id++;
-  const cbId = id++;
-  const bankId = id++;
-  const firmStart = id;
-  id += Math.max(1, params.firms);
-  const hhStart = id;
-  id += Math.max(1, params.households);
-
-  const nF = Math.max(1, params.firms);
-  const nH = Math.max(1, params.households);
-
-  const { w: vbw, h: vbh } = LIVE_GRAPH_VB;
-  /* Institution hub slightly left of geometric center so east (firms) and south (households) have margin. */
-  const cx = vbw * 0.46;
-  const cy = vbh * 0.44;
-  const nodes: AgentLayout[] = [];
-
-  nodes.push({
-    id: govId,
-    kind: "government",
-    x: cx - 295,
-    y: cy + 12,
-    r: 23,
-    shortLabel: "Gov"
-  });
-  nodes.push({
-    id: cbId,
-    kind: "central_bank",
-    x: cx - 8,
-    y: cy - 248,
-    r: 22,
-    shortLabel: "CB"
-  });
-  nodes.push({
-    id: bankId,
-    kind: "bank",
-    x: cx,
-    y: cy,
-    r: 30,
-    shortLabel: "Bank"
-  });
-
-  /* Firms on an eastern arc opening toward the bank (angles ~ −55°…+55°, 0° = east). */
-  const firmPivotX = cx + 418;
-  const firmPivotY = cy + 8;
-  const firmArcSpan = Math.min(1.12, 0.52 + nF * 0.024);
-  const firmR = Math.min(245, 148 + nF * 4.2);
-  for (let i = 0; i < nF; i++) {
-    const t = (i + 0.5) / nF;
-    const theta = (-firmArcSpan * Math.PI) / 2 + firmArcSpan * Math.PI * t;
-    const fid = firmStart + i;
-    nodes.push({
-      id: fid,
-      kind: "firm",
-      x: firmPivotX + firmR * Math.cos(theta),
-      y: firmPivotY + firmR * Math.sin(theta),
-      r: nF > 45 ? 4.2 : 6,
-      shortLabel: nF <= 28 ? `F${i}` : ""
-    });
-  }
-
-  /*
-   * Households on the lower rim around the bank (not bundled on the west side).
-   * Polar angle in SVG-style coords: 0° = east, 90° = south. Sweep ~30°…150° (bottom bowl).
-   */
-  const hhTheta0 = Math.PI / 6;
-  const hhTheta1 = (5 * Math.PI) / 6;
-  const hhArcSpan = hhTheta1 - hhTheta0;
-  const targetSpacing = nH > 400 ? 4.8 : nH > 150 ? 5.6 : 6.5;
-  const hhR = Math.min(505, Math.max(268, (nH * targetSpacing) / hhArcSpan));
-
-  for (let i = 0; i < nH; i++) {
-    const t = (i + 0.5) / nH;
-    const theta = hhTheta0 + hhArcSpan * t;
-    const hid = hhStart + i;
-    nodes.push({
-      id: hid,
-      kind: "household",
-      x: cx + hhR * Math.cos(theta),
-      y: cy + hhR * Math.sin(theta),
-      r: nH > 320 ? 2.5 : nH > 140 ? 3.2 : 4,
-      shortLabel: ""
-    });
-  }
-
-  return nodes;
-}
 
 const FAMILY_COLORS: Record<string, string> = {
   labor: "#009E73",
@@ -128,14 +28,6 @@ const NODE_STROKE: Record<AgentKind, string> = {
   bank: "rgba(244, 244, 245, 0.95)",
   firm: "rgba(56, 189, 248, 0.75)",
   household: "rgba(113, 113, 122, 0.65)"
-};
-
-const NODE_FILL: Record<AgentKind, string> = {
-  government: "rgba(180, 83, 9, 0.22)",
-  central_bank: "rgba(139, 92, 246, 0.2)",
-  bank: "rgba(228, 228, 231, 0.12)",
-  firm: "rgba(14, 165, 233, 0.16)",
-  household: "rgba(63, 63, 70, 0.35)"
 };
 
 const LEGEND_FAMILIES: Array<{ key: string; label: string }> = [
@@ -259,19 +151,46 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
   });
   const [dragging, setDragging] = useState(false);
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const fullscreenRef = useRef<HTMLDivElement | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [tick, setTick] = useState(0);
   const prevRef = useRef<{ msg: number; t: number } | null>(null);
   const [activity, setActivity] = useState(0);
 
-  const agents = useMemo(() => buildAgentLayout(params), [params.firms, params.households]);
+  const agents = useMemo(
+    () => computeAgentLayout(params, LIVE_GRAPH_VB),
+    [params.firms, params.households, params.seed]
+  );
   const agentCount = agents.length;
   const posById = useMemo(() => new Map(agents.map((a) => [a.id, a])), [agents]);
 
   useEffect(() => {
     setPan({ x: 0, y: 0 });
     setZoom(1);
-  }, [params.firms, params.households]);
+  }, [params.firms, params.households, params.seed]);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === fullscreenRef.current);
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    const host = fullscreenRef.current;
+    if (!host) return;
+    try {
+      if (document.fullscreenElement === host) {
+        await document.exitFullscreen();
+      } else {
+        await host.requestFullscreen();
+      }
+    } catch {
+      /* browser may block without user gesture */
+    }
+  };
 
   useEffect(() => {
     const host = viewportRef.current;
@@ -380,7 +299,7 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
 
   const caption = (() => {
     if (isIdle) {
-      return `${agentCount} agents (baseline layout). Scroll/pinch to zoom, drag to pan. Run the sim to stream sampled kernel messages; edges show who messaged whom and are tinted by message family.`;
+      return `${agentCount} agents · layout fixed from parameters (structural graph). Scroll/pinch to zoom, drag to pan; fullscreen expands the graph panel. Live edges tint by message family.`;
     }
     if (edges.length > 0) {
       return `Showing up to ${MAX_VISIBLE_EDGES} busiest directed links from recent telemetry (sampled 1 in N). Stroke color = dominant message family on that link. Zoom into regions to untangle overlaps.`;
@@ -394,7 +313,7 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
         <div className="live-graph-header">
           <div className="live-graph-title-row">
             <h4>
-              <span className="live-graph-badge" aria-hidden />
+              <UiIcon icon={Network} className="live-graph-title-icon" />
               Agent network
             </h4>
             {isLive ? (
@@ -408,15 +327,33 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
           </span>
         </div>
 
-        <div className="live-graph-viewport" ref={viewportRef}>
-          <div className="live-graph-viewport-toolbar">
-            <button type="button" className="secondary live-graph-reset-btn" onClick={resetView}>
-              Reset view
-            </button>
-            <span className="live-graph-zoom-hint" aria-hidden>
-              {zoom >= 10 ? zoom.toFixed(1) : `${zoom.toFixed(2)}×`}
-            </span>
-          </div>
+        <div className="live-graph-fs-host" ref={fullscreenRef}>
+          <div className="live-graph-viewport" ref={viewportRef}>
+            <div className="live-graph-viewport-toolbar">
+              <button
+                type="button"
+                className="live-graph-icon-btn"
+                onClick={() => void toggleFullscreen()}
+                aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              >
+                <UiIcon icon={isFullscreen ? Minimize2 : Maximize2} size="lg" className="live-graph-toolbar-icon" />
+              </button>
+              <div className="live-graph-viewport-toolbar-right">
+                <button
+                  type="button"
+                  className="secondary live-graph-reset-btn"
+                  onClick={resetView}
+                  title="Reset view"
+                >
+                  <UiIcon icon={RotateCcw} size="sm" className="live-graph-toolbar-icon" />
+                  Reset view
+                </button>
+                <span className="live-graph-zoom-hint" aria-hidden>
+                  {zoom >= 10 ? zoom.toFixed(1) : `${zoom.toFixed(2)}×`}
+                </span>
+              </div>
+            </div>
           <svg
             ref={svgRef}
             className="live-graph-svg live-graph-svg--network"
@@ -507,6 +444,7 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
               ))}
             </g>
           </svg>
+          </div>
         </div>
 
         <div className="live-graph-legend">

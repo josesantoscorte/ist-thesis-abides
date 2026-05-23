@@ -14,6 +14,7 @@ import {
 import { getCurrentRun, getMonitorSnapshot, getRunResults, getRunTelemetry, getRuns, startRun, stopCurrentRun } from "./api";
 import { LiveAgentGraph } from "./LiveAgentGraph";
 import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams, TelemetryEvent } from "./types";
+import { Activity, BarChart3, Cpu, Gauge, Layers, Play, SlidersHorizontal, Square, UiIcon } from "./ui/icons";
 import "./styles.css";
 
 const defaultParams: SimulationParams = {
@@ -365,9 +366,11 @@ export default function App() {
           <h1 className="workspace-title">ABIDES Dashboard</h1>
           <div className="sidebar-actions top-actions">
             <button onClick={start} disabled={loading || isActive}>
+              <UiIcon icon={Play} size="sm" />
               Run
             </button>
             <button className="secondary" onClick={stop} disabled={loading || !isActive}>
+              <UiIcon icon={Square} size="sm" />
               Stop
             </button>
             <div className="status-pill" data-tone={statusTone}>
@@ -381,7 +384,8 @@ export default function App() {
             className={activeTab === "monitor" ? "tab active" : "tab"}
             onClick={() => setActiveTab("monitor")}
           >
-            <span className="ui-icon">◍</span> Live Monitor
+            <UiIcon icon={Activity} />
+            Live Monitor
           </button>
           <button
             className={activeTab === "results" ? "tab active" : "tab"}
@@ -392,7 +396,8 @@ export default function App() {
               }
             }}
           >
-            <span className="ui-icon">◫</span> History & Results
+            <UiIcon icon={BarChart3} />
+            History & Results
           </button>
         </div>
       </header>
@@ -402,7 +407,8 @@ export default function App() {
           <div className="preset-row">
             <label>
               <span>
-                <span className="ui-icon">◉</span> Preset
+                <UiIcon icon={Layers} />
+                Preset
               </span>
               <select
                 value={selectedPreset}
@@ -420,7 +426,8 @@ export default function App() {
 
           <div className="parameter-scroll">
             <h2>
-              <span className="ui-icon">◧</span> Parameters
+              <UiIcon icon={SlidersHorizontal} />
+              Parameters
             </h2>
             <div className="parameter-grid">
               {paramKeys.map((key) => {
@@ -461,7 +468,8 @@ export default function App() {
               <div className="monitor-groups">
                 <div className="monitor-box">
                   <h4>
-                    <span className="ui-icon">◍</span> Hardware
+                    <UiIcon icon={Cpu} />
+                    Hardware
                   </h4>
                   <div className="kpis live-kpis live-top-metrics">
                     <div className="kpi">
@@ -472,7 +480,8 @@ export default function App() {
                 </div>
                 <div className="monitor-box">
                   <h4>
-                    <span className="ui-icon">◔</span> Simulation Runtime
+                    <UiIcon icon={Gauge} />
+                    Simulation Runtime
                   </h4>
                   <div className="kpis live-kpis live-top-metrics">
                     <div className="kpi">

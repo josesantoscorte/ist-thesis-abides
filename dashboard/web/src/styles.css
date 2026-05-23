@@ -40,13 +40,18 @@ body {
 }
 
 .ui-icon {
+  display: block;
+  flex-shrink: 0;
+  color: #a1a1aa;
+}
+
+.monitor-box h4,
+.live-graph-header h4,
+.parameter-scroll h2,
+.preset-row label > span:first-child {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  margin-right: 6px;
-  color: #a1a1aa;
-  font-size: 12px;
-  line-height: 1;
+  gap: 7px;
 }
 
 .sidebar-header p {
@@ -205,6 +210,10 @@ input {
 
 .top-actions > button {
   min-width: 88px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
 }
 
 .tab {
@@ -212,6 +221,7 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 7px;
 }
 
 .tab.active {
@@ -434,13 +444,8 @@ input {
   color: #e4e4e7;
 }
 
-.live-graph-badge {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #a78bfa, #38bdf8);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+.live-graph-title-icon {
+  color: #a78bfa;
 }
 
 .live-graph-live {
@@ -467,16 +472,38 @@ input {
   line-height: 1.35;
 }
 
+.live-graph-fs-host {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.live-graph-fs-host:fullscreen {
+  display: flex;
+  flex-direction: column;
+  background: #050508;
+  padding: 0;
+}
+
+.live-graph-fs-host:fullscreen .live-graph-viewport {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  aspect-ratio: auto;
+  border-radius: 0;
+  border: none;
+}
+
 .live-graph-viewport {
   position: relative;
   width: 100%;
   aspect-ratio: 1320 / 780;
-  max-height: min(62vh, 720px);
-  min-height: 280px;
+  max-height: min(72vh, 820px);
+  min-height: 400px;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(52, 52, 58, 0.85);
-  /* Fills the whole viewport; SVG graph may letterbox but background always tracks the box */
   background-color: #050508;
   background-image: radial-gradient(
     ellipse 92% 88% at 50% 42%,
@@ -485,7 +512,6 @@ input {
     #050508 100%
   );
   touch-action: none;
-  flex-shrink: 0;
   isolation: isolate;
   user-select: none;
   -webkit-user-select: none;
@@ -499,21 +525,63 @@ input {
 .live-graph-viewport-toolbar {
   position: absolute;
   top: 10px;
+  left: 10px;
   right: 10px;
   z-index: 4;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.live-graph-viewport-toolbar-right {
   display: flex;
   align-items: center;
   gap: 10px;
   pointer-events: none;
 }
 
-.live-graph-viewport-toolbar button,
-.live-graph-viewport-toolbar .live-graph-zoom-hint {
+.live-graph-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid #3f3f46;
+  background: rgba(12, 12, 16, 0.92);
+  color: #d4d4d8;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.live-graph-icon-btn:hover {
+  background: #27272a;
+  color: #f4f4f5;
+  border-color: #52525b;
+}
+
+.live-graph-toolbar-icon {
+  color: inherit;
+}
+
+.live-graph-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-graph-viewport-toolbar-right button,
+.live-graph-viewport-toolbar-right .live-graph-zoom-hint {
   pointer-events: auto;
 }
 
 .live-graph-reset-btn {
-  padding: 4px 11px;
+  padding: 4px 10px;
   font-size: 11px;
   border-radius: 8px;
   opacity: 0.92;

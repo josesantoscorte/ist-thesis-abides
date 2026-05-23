@@ -9,6 +9,7 @@ import {
   type SimulationLinkDatum,
   type SimulationNodeDatum
 } from "d3-force";
+import { firmLabelForIndex, isPinnedAgent, nodeCollisionRadius } from "./nodeMetrics";
 import type { SimulationParams } from "./types";
 
 export type AgentKind = "government" | "central_bank" | "bank" | "firm" | "household";
@@ -79,9 +80,9 @@ function nodeRadius(kind: AgentKind, nF: number, nH: number): number {
     case "bank":
       return 30;
     case "firm":
-      return nF > 45 ? 4.2 : 6;
+      return nF > 45 ? 7 : 9;
     case "household":
-      return nH > 320 ? 2.5 : nH > 140 ? 3.2 : 4;
+      return nH > 320 ? 5 : nH > 140 ? 6 : 7;
     default:
       return 4;
   }
@@ -111,7 +112,7 @@ function typeTargetY(kind: AgentKind, vb: LayoutBounds): number {
     case "central_bank":
       return vb.h * 0.1;
     case "bank":
-      return vb.h * 0.46;
+      return vb.h * 0.4;
     case "firm":
       return vb.h * 0.4;
     case "household":
@@ -153,7 +154,12 @@ function structuralLinks(ids: AgentIds): RawLink[] {
 }
 
 /** Scale and center node positions to use most of the viewBox (fixed after params). */
-function fitLayoutToBounds(nodes: AgentLayout[], vb: LayoutBounds, margin = 0.05): AgentLayout[] {
+function fitLayoutToBounds(
+  nodes: AgentLayout[],
+  vb: LayoutBounds,
+  nF: number,
+  margin = 0.05
+): AgentLayout[] {
   if (nodes.length === 0) return nodes;
 
   let minX = Infinity;
@@ -162,10 +168,11 @@ function fitLayoutToBounds(nodes: AgentLayout[], vb: LayoutBounds, margin = 0.05
   let maxY = -Infinity;
 
   for (const n of nodes) {
-    minX = Math.min(minX, n.x - n.r);
-    maxX = Math.max(maxX, n.x + n.r);
-    minY = Math.min(minY, n.y - n.r);
-    maxY = Math.max(maxY, n.y + n.r);
+    const cr = nodeCollisionRadius(n, nF);
+    minX = Math.min(minX, n.x - cr);
+    maxX = Math.max(maxX, n.x + cr);
+    minY = Math.min(minY, n.y - cr);
+    maxY = Math.max(maxY, n.y + cr);
   }
 
   const bw = Math.max(maxX - minX, 1);
@@ -183,6 +190,56 @@ function fitLayoutToBounds(nodes: AgentLayout[], vb: LayoutBounds, margin = 0.05
     x: targetCx + (n.x - cx) * scale,
     y: targetCy + (n.y - cy) * scale
   }));
+}
+
+/** Push overlapping nodes apart (respects pinned institutions). */
+function resolveOverlaps(nodes: AgentLayout[], vb: LayoutBounds, nF: number, passes = 16): void {
+  const edgePad = 52;
+  const gap = 6;
+
+  for (let pass = 0; pass < passes; pass++) {
+    let moved = false;
+
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i];
+        const b = nodes[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 0.001;
+        const minD = nodeCollisionRadius(a, nF) + nodeCollisionRadius(b, nF) + gap;
+        if (dist >= minD) continue;
+
+        const push = (minD - dist) / 2;
+        const ux = dx / dist;
+        const uy = dy / dist;
+        const aPin = isPinnedAgent(a.id);
+        const bPin = isPinnedAgent(b.id);
+
+        if (!aPin && !bPin) {
+          a.x -= ux * push;
+          a.y -= uy * push;
+          b.x += ux * push;
+          b.y += uy * push;
+        } else if (aPin && !bPin) {
+          b.x += ux * push * 2;
+          b.y += uy * push * 2;
+        } else if (!aPin && bPin) {
+          a.x -= ux * push * 2;
+          a.y -= uy * push * 2;
+        }
+        moved = true;
+      }
+    }
+
+    for (const n of nodes) {
+      const cr = nodeCollisionRadius(n, nF);
+      n.x = Math.max(edgePad + cr, Math.min(vb.w - edgePad - cr, n.x));
+      n.y = Math.max(edgePad + cr, Math.min(vb.h - edgePad - cr, n.y));
+    }
+
+    if (!moved) break;
+  }
 }
 
 function forceDirectedLayout(params: SimulationParams, vb: LayoutBounds): AgentLayout[] {
@@ -207,10 +264,10 @@ function forceDirectedLayout(params: SimulationParams, vb: LayoutBounds): AgentL
 
   pushNode(ids.govId, "government", "Gov", vb.w * 0.12, vb.h * 0.5);
   pushNode(ids.cbId, "central_bank", "CB", vb.w * 0.5, vb.h * 0.1);
-  pushNode(ids.bankId, "bank", "Bank", vb.w * 0.46, vb.h * 0.46);
+  pushNode(ids.bankId, "bank", "Bank", vb.w * 0.46, vb.h * 0.4);
 
   for (let i = 0; i < ids.nF; i++) {
-    pushNode(ids.firmStart + i, "firm", ids.nF <= 28 ? `F${i}` : "");
+    pushNode(ids.firmStart + i, "firm", firmLabelForIndex(i, ids.nF));
   }
   for (let h = 0; h < ids.nH; h++) {
     pushNode(ids.hhStart + h, "household", "");
@@ -226,16 +283,16 @@ function forceDirectedLayout(params: SimulationParams, vb: LayoutBounds): AgentL
   }
 
   const charge =
-    ids.total > 900 ? -48 : ids.total > 400 ? -72 : ids.total > 150 ? -95 : -120;
+    ids.total > 900 ? -62 : ids.total > 400 ? -88 : ids.total > 150 ? -115 : -145;
   const linkDist = (l: LayoutLink) => {
     const s = l.source as SimNode;
     const t = l.target as SimNode;
-    const base = s.r + t.r + 52;
-    return s.kind === "household" || t.kind === "household" ? base + 22 : base + 38;
+    const cr = nodeCollisionRadius(s, ids.nF) + nodeCollisionRadius(t, ids.nF);
+    return cr * 0.72 + 24;
   };
-  const linkStrength = (l: LayoutLink) => Math.min(0.75, 0.12 + 0.1 * Math.sqrt(l.weight));
+  const linkStrength = (l: LayoutLink) => Math.min(0.65, 0.1 + 0.08 * Math.sqrt(l.weight));
 
-  const iterations = Math.min(480, Math.max(140, 100 + Math.floor(ids.total * 0.4)));
+  const iterations = Math.min(520, Math.max(160, 120 + Math.floor(ids.total * 0.45)));
 
   const simulation = forceSimulation(nodes)
     .force(
@@ -249,9 +306,9 @@ function forceDirectedLayout(params: SimulationParams, vb: LayoutBounds): AgentL
     .force(
       "collide",
       forceCollide<SimNode>()
-        .radius((d) => d.r + (d.kind === "household" ? 4 : 6))
-        .strength(0.95)
-        .iterations(3)
+        .radius((d) => nodeCollisionRadius(d, ids.nF))
+        .strength(1)
+        .iterations(4)
     )
     .force(
       "x",
@@ -277,7 +334,10 @@ function forceDirectedLayout(params: SimulationParams, vb: LayoutBounds): AgentL
     shortLabel: n.shortLabel
   }));
 
-  return fitLayoutToBounds(laidOut, vb, 0.055);
+  resolveOverlaps(laidOut, vb, ids.nF, 20);
+  const fitted = fitLayoutToBounds(laidOut, vb, ids.nF, 0.06);
+  resolveOverlaps(fitted, vb, ids.nF, 16);
+  return fitted;
 }
 
 function geometricFallbackLayout(params: SimulationParams, vb: LayoutBounds): AgentLayout[] {
@@ -292,7 +352,7 @@ function geometricFallbackLayout(params: SimulationParams, vb: LayoutBounds): Ag
   const nH = Math.max(1, params.households);
 
   const cx = vb.w * 0.5;
-  const cy = vb.h * 0.46;
+  const cy = vb.h * 0.4;
   const nodes: AgentLayout[] = [];
 
   nodes.push({ id: govId, kind: "government", x: vb.w * 0.1, y: cy, r: 23, shortLabel: "Gov" });
@@ -310,7 +370,7 @@ function geometricFallbackLayout(params: SimulationParams, vb: LayoutBounds): Ag
       x: firmCx + firmR * Math.cos(theta),
       y: cy + firmR * Math.sin(theta),
       r: 4.2,
-      shortLabel: nF <= 28 ? `F${i}` : ""
+      shortLabel: firmLabelForIndex(i, nF)
     });
   }
 
@@ -331,7 +391,10 @@ function geometricFallbackLayout(params: SimulationParams, vb: LayoutBounds): Ag
     });
   }
 
-  return fitLayoutToBounds(nodes, vb, 0.055);
+  resolveOverlaps(nodes, vb, nF, 14);
+  const fitted = fitLayoutToBounds(nodes, vb, nF, 0.055);
+  resolveOverlaps(fitted, vb, nF, 14);
+  return fitted;
 }
 
 /** Compute agent positions once from simulation parameters (not live telemetry). */

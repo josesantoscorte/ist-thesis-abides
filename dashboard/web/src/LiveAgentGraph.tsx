@@ -1,7 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { computeAgentLayout, type AgentKind } from "./graphLayout";
+import { GraphAgentNode } from "./GraphAgentNode";
+import { agentEdgeRadius, nodeCollisionRadius } from "./nodeMetrics";
+import { computeAgentLayout } from "./graphLayout";
 import type { RunState, SimulationParams, TelemetryEvent } from "./types";
-import { Maximize2, Minimize2, Network, RotateCcw, UiIcon } from "./ui/icons";
+import { AGENT_KIND_LEGEND, AGENT_NODE_META, Maximize2, Minimize2, Network, RotateCcw, UiIcon } from "./ui/icons";
 
 type Props = {
   run: RunState | null;
@@ -22,14 +24,6 @@ const FAMILY_COLORS: Record<string, string> = {
   unknown: "#a1a1aa"
 };
 
-const NODE_STROKE: Record<AgentKind, string> = {
-  government: "rgba(245, 158, 11, 0.85)",
-  central_bank: "rgba(167, 139, 250, 0.9)",
-  bank: "rgba(244, 244, 245, 0.95)",
-  firm: "rgba(56, 189, 248, 0.75)",
-  household: "rgba(113, 113, 122, 0.65)"
-};
-
 const LEGEND_FAMILIES: Array<{ key: string; label: string }> = [
   { key: "labor", label: "Labor" },
   { key: "credit", label: "Credit" },
@@ -42,8 +36,72 @@ const LEGEND_FAMILIES: Array<{ key: string; label: string }> = [
 
 const MAX_VISIBLE_EDGES = 130;
 
-const ZOOM_MIN = 0.35;
 const ZOOM_MAX = 4;
+const FIT_MARGIN = 36;
+
+type Bounds = { minX: number; minY: number; maxX: number; maxY: number };
+
+function agentsVisualBounds(agents: ReturnType<typeof computeAgentLayout>, nF: number): Bounds {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const a of agents) {
+    const r = nodeCollisionRadius(a, nF);
+    minX = Math.min(minX, a.x - r);
+    maxX = Math.max(maxX, a.x + r);
+    minY = Math.min(minY, a.y - r);
+    maxY = Math.max(maxY, a.y + r);
+  }
+  if (!Number.isFinite(minX)) {
+    return { minX: 0, minY: 0, maxX: LIVE_GRAPH_VB.w, maxY: LIVE_GRAPH_VB.h };
+  }
+  return { minX, minY, maxX, maxY };
+}
+
+/**
+ * Smallest zoom (most zoomed-out) that keeps the agent bounds inside the viewBox
+ * for the current pan. Transform: screen = pan + center + zoom * (content - center).
+ */
+function minZoomFittingBounds(
+  b: Bounds,
+  vb: { w: number; h: number },
+  pan: { x: number; y: number },
+  margin = FIT_MARGIN
+): number {
+  const cx = vb.w / 2;
+  const cy = vb.h / 2;
+  const { minX, minY, maxX, maxY } = b;
+  const uppers: number[] = [];
+  const lowers: number[] = [];
+
+  const addUpper = (num: number, den: number) => {
+    if (den > 1e-6) uppers.push(num / den);
+  };
+  const addLower = (num: number, den: number) => {
+    if (den > 1e-6) lowers.push(num / den);
+  };
+
+  const px = pan.x;
+  const py = pan.y;
+
+  if (minX < cx) addUpper(margin - px - cx, minX - cx);
+  else if (minX > cx) addLower(margin - px - cx, minX - cx);
+
+  if (maxX > cx) addUpper(vb.w - margin - px - cx, maxX - cx);
+  else if (maxX < cx) addLower(vb.w - margin - px - cx, maxX - cx);
+
+  if (minY < cy) addUpper(margin - py - cy, minY - cy);
+  else if (minY > cy) addLower(margin - py - cy, minY - cy);
+
+  if (maxY > cy) addUpper(vb.h - margin - py - cy, maxY - cy);
+  else if (maxY < cy) addLower(vb.h - margin - py - cy, maxY - cy);
+
+  const zCap = uppers.length ? Math.min(...uppers) : ZOOM_MAX;
+  const zFloor = lowers.length ? Math.max(...lowers) : 0;
+  const fit = zFloor <= zCap ? zFloor : zCap;
+  return Math.max(0.08, Math.min(ZOOM_MAX, fit));
+}
 
 /** Map screen coordinates to SVG viewBox space (handles letterboxing from preserveAspectRatio). */
 function clientToSvg(svg: SVGSVGElement, clientX: number, clientY: number): { x: number; y: number } | null {
@@ -132,7 +190,6 @@ function aggregateEdges(events: TelemetryEvent[], agentCount: number): PairAgg[]
 
 export function LiveAgentGraph({ run, params, telemetry }: Props) {
   const uid = useId().replace(/:/g, "");
-  const gradNode = `live-node-${uid}`;
   const filterGlow = `live-glow-${uid}`;
 
   const vb = LIVE_GRAPH_VB;
@@ -165,10 +222,21 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
   const agentCount = agents.length;
   const posById = useMemo(() => new Map(agents.map((a) => [a.id, a])), [agents]);
 
+  const agentsBounds = useMemo(() => agentsVisualBounds(agents, params.firms), [agents, params.firms]);
+
+  const minZoom = useMemo(
+    () => minZoomFittingBounds(agentsBounds, vb, pan, FIT_MARGIN),
+    [agentsBounds, pan.x, pan.y, vb.w, vb.h]
+  );
+
   useEffect(() => {
     setPan({ x: 0, y: 0 });
     setZoom(1);
   }, [params.firms, params.households, params.seed]);
+
+  useEffect(() => {
+    setZoom((z) => (z < minZoom ? minZoom : z));
+  }, [minZoom]);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -206,7 +274,7 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
       const cx = vb.w / 2;
       const cy = vb.h / 2;
       setZoom((z) => {
-        const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z * factor));
+        const next = Math.min(ZOOM_MAX, Math.max(minZoom, z * factor));
         if (next === z) return z;
         setPan((p) => ({
           x: m.x - cx - (next / z) * (m.x - p.x - cx),
@@ -217,7 +285,7 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
     };
     host.addEventListener("wheel", onWheel, { passive: false });
     return () => host.removeEventListener("wheel", onWheel);
-  }, []);
+  }, [minZoom]);
 
   const cx = vb.w / 2;
   const cy = vb.h / 2;
@@ -373,10 +441,6 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
             }}
           >
             <defs>
-              <radialGradient id={gradNode} cx="38%" cy="35%" r="70%">
-                <stop offset="0%" stopColor="rgba(250,250,250,0.16)" />
-                <stop offset="100%" stopColor="rgba(30,30,36,0.5)" />
-              </radialGradient>
               <filter id={filterGlow} x="-55%" y="-55%" width="210%" height="210%">
                 <feGaussianBlur stdDeviation="2.4" result="b" />
                 <feMerge>
@@ -392,8 +456,8 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
                   const a = posById.get(e.sender);
                   const b = posById.get(e.recipient);
                   if (!a || !b) return null;
-                  const p1 = ptOnCircle(a.x, a.y, a.r, b.x, b.y);
-                  const p2 = ptOnCircle(b.x, b.y, b.r, a.x, a.y);
+                  const p1 = ptOnCircle(a.x, a.y, agentEdgeRadius(a, params.firms), b.x, b.y);
+                  const p2 = ptOnCircle(b.x, b.y, agentEdgeRadius(b, params.firms), a.x, a.y);
                   const d = quadPath(p1.x, p1.y, p2.x, p2.y, pairBend(e.sender, e.recipient));
                   const w = clamp01(e.total / maxEdgeWeight);
                   const stroke = FAMILY_COLORS[e.dominantFamily] ?? FAMILY_COLORS.unknown;
@@ -416,50 +480,60 @@ export function LiveAgentGraph({ run, params, telemetry }: Props) {
               </g>
 
               {agents.map((a) => (
-                <g key={a.id} className={`live-graph-node live-graph-node--${a.kind}`} transform={`translate(${a.x}, ${a.y})`}>
-                  <title>{`${a.kind.replace(/_/g, " ")} · id ${a.id}`}</title>
-                  <circle
-                    r={a.r}
-                    fill={`url(#${gradNode})`}
-                    fillOpacity={0.92}
-                    stroke={NODE_STROKE[a.kind]}
-                    strokeWidth={a.kind === "bank" ? 2 : a.kind === "household" ? 0.9 : 1.35}
-                    vectorEffect="non-scaling-stroke"
-                    style={{
-                      filter: a.kind === "bank" || a.kind === "central_bank" ? `url(#${filterGlow})` : undefined,
-                      opacity: 0.42 + breath * (a.kind === "household" ? 0.38 : 0.52)
-                    }}
-                  />
-                  {a.shortLabel ? (
-                    <text
-                      y={a.kind === "firm" ? 3.5 : 4}
-                      textAnchor="middle"
-                      className="live-graph-node-label"
-                      fontSize={10 / zoom}
-                    >
-                      {a.shortLabel}
-                    </text>
-                  ) : null}
-                </g>
+                <GraphAgentNode
+                  key={a.id}
+                  agent={a}
+                  breath={breath}
+                  zoom={zoom}
+                  firmCount={params.firms}
+                  glowFilterId={filterGlow}
+                />
               ))}
             </g>
           </svg>
           </div>
         </div>
 
-        <div className="live-graph-legend">
-          <span className="live-graph-legend-title">Message family</span>
-          <ul className="live-graph-legend-items" aria-label="Message family color key">
-            {LEGEND_FAMILIES.map(({ key, label }) => (
-              <li key={key}>
-                <span className="live-graph-legend-swatch" style={{ background: FAMILY_COLORS[key] ?? FAMILY_COLORS.unknown }} />
-                {label}
-              </li>
-            ))}
-          </ul>
+        <div className="live-graph-info">
+          <div className="live-graph-legend">
+            <section className="live-graph-legend-section" aria-labelledby="live-graph-legend-agents">
+              <h5 id="live-graph-legend-agents" className="live-graph-legend-title">
+                Agent types
+              </h5>
+              <ul className="live-graph-legend-items" aria-label="Agent type icons">
+                {AGENT_KIND_LEGEND.map((kind) => {
+                  const meta = AGENT_NODE_META[kind];
+                  const Icon = meta.icon;
+                  return (
+                    <li key={kind}>
+                      <span className="live-graph-legend-icon" style={{ color: meta.color }}>
+                        <Icon size={14} strokeWidth={1.75} aria-hidden />
+                      </span>
+                      {meta.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+            <section className="live-graph-legend-section" aria-labelledby="live-graph-legend-families">
+              <h5 id="live-graph-legend-families" className="live-graph-legend-title">
+                Message family
+              </h5>
+              <ul className="live-graph-legend-items" aria-label="Message family color key">
+                {LEGEND_FAMILIES.map(({ key, label }) => (
+                  <li key={key}>
+                    <span
+                      className="live-graph-legend-swatch"
+                      style={{ background: FAMILY_COLORS[key] ?? FAMILY_COLORS.unknown }}
+                    />
+                    {label}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+          <p className="live-graph-caption">{caption}</p>
         </div>
-
-        <p className="live-graph-caption">{caption}</p>
       </div>
     </div>
   );

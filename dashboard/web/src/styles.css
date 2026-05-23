@@ -412,10 +412,10 @@ input {
 }
 
 .live-graph-inner {
-  padding: 14px 16px 12px;
+  padding: 14px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -620,37 +620,58 @@ input {
   }
 }
 
-.live-graph-node-label {
-  fill: #f4f4f5;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+.live-graph-node-halo {
   pointer-events: none;
 }
 
-.live-graph-node--bank .live-graph-node-label {
-  font-size: 11px;
+.live-graph-node-label {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  opacity: 0.92;
 }
 
-.live-graph-node--government .live-graph-node-label,
-.live-graph-node--central_bank .live-graph-node-label {
-  font-size: 10px;
+.live-graph-legend-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: rgba(24, 24, 27, 0.9);
+  border: 1px solid rgba(63, 63, 70, 0.8);
 }
 
-.live-graph-legend {
-  margin-top: 10px;
-  padding-top: 10px;
+.live-graph-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+  padding-top: 16px;
   border-top: 1px solid rgba(39, 39, 42, 0.95);
 }
 
+.live-graph-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.live-graph-legend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+
 .live-graph-legend-title {
-  display: block;
+  margin: 0;
   font-size: 10px;
   font-weight: 600;
+  line-height: 1.4;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #71717a;
-  margin-bottom: 6px;
 }
 
 .live-graph-legend-items {
@@ -659,30 +680,35 @@ input {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
+  align-items: center;
+  gap: 10px 18px;
+  row-gap: 12px;
 }
 
 .live-graph-legend-items li {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 10px;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.5;
   color: #a1a1aa;
 }
 
 .live-graph-legend-swatch {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   flex-shrink: 0;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
 .live-graph-caption {
-  margin: 10px 0 0;
+  margin: 0;
+  padding-top: 4px;
   font-size: 11px;
   color: #71717a;
-  line-height: 1.45;
+  line-height: 1.6;
+  max-width: 72rem;
 }
 
 @media (max-width: 1100px) {

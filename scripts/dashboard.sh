@@ -35,9 +35,10 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-echo "Starting ABIDES dashboard API on http://$API_HOST:$API_PORT ..."
 (cd "$ROOT_DIR" && python3 -m uvicorn dashboard.server:app --host "$API_HOST" --port "$API_PORT") &
 API_PID=$!
+
+echo "Starting Olympus dashboard API (powered by ABIDES) on http://$API_HOST:$API_PORT ..."
 
 sleep 1
 if ! kill -0 "$API_PID" >/dev/null 2>&1; then
@@ -45,7 +46,8 @@ if ! kill -0 "$API_PID" >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Starting dashboard web UI on http://$API_HOST:$WEB_PORT ..."
+(cd "$ROOT_DIR" && sleep 0) # ensure API start initiated
+echo "Starting Olympus web UI (dashboard) on http://$API_HOST:$WEB_PORT ..."
 (cd "$WEB_DIR" && npm run dev -- --host "$API_HOST" --port "$WEB_PORT") &
 WEB_PID=$!
 

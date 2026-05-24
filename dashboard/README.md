@@ -1,6 +1,8 @@
-# ABIDES Dashboard
+# Olympus — ABIDES Dashboard
 
-Modern web dashboard for configuring, running, monitoring, and analyzing simulation runs.
+Olympus is a modern web dashboard built on top of the ABIDES simulation framework. It provides a friendly UI
+for configuring, running, monitoring, and analyzing simulation runs while keeping the underlying ABIDES
+project as the simulation engine.
 
 ## 1) Install backend dependencies
 

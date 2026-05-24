@@ -819,7 +819,7 @@ def _read_telemetry_tail(log_dir: str, limit: int = 800) -> List[Dict[str, Any]]
 
 
 manager = SimulationManager()
-app = FastAPI(title="ABIDES Dashboard API", version="1.0.0")
+app = FastAPI(title="Olympus Dashboard API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

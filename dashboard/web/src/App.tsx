@@ -21,7 +21,7 @@ import { RunTitle } from "./RunTitle";
 import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams, TelemetryEvent } from "./types";
 import { ParameterSidebar } from "./ParameterSidebar";
 import { defaultParams, type PresetKey } from "./simulationConfig";
-import { Activity, BarChart3, Cpu, Gauge, Play, Square, UiIcon } from "./ui/icons";
+import { Activity, BarChart3, Cpu, Gauge, Play, Square, UiIcon, Landmark } from "./ui/icons";
 import "./styles.css";
 
 const chartColors = {
@@ -285,7 +285,10 @@ export default function App() {
     <div className="page-shell">
       <header className="topbar">
         <div className="workspace-top-left">
-          <h1 className="workspace-title">ABIDES Dashboard</h1>
+          <h1 className="workspace-title">
+            <UiIcon icon={Landmark} size="md" />
+            Olympus
+          </h1>
           <div className="sidebar-actions top-actions">
             <button onClick={start} disabled={loading || isActive}>
               <UiIcon icon={Play} size="sm" />

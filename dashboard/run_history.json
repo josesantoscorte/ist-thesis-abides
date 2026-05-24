@@ -1676,6 +1676,198 @@
       "run_id": "run-20260523-113615",
       "started_at": "2026-05-23T11:36:15.200790Z",
       "status": "completed"
+    },
+    {
+      "error": "Simulation stopped from dashboard.",
+      "exit_code": -15,
+      "failure_detail": null,
+      "failure_reason": "user_stopped",
+      "finished_at": "2026-05-24T09:29:15.284293Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 2.622795032842895,
+          "memory_rss_mb": 56.359375,
+          "memory_vms_mb": 432154.0625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 8,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 54.4,
+          "ram_percent": 86.0,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.26812744140625
+        },
+        "messages_processed": 1000000,
+        "progress_pct": 9.074074074080505,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 97.6079710565595,
+          "memory_rss_mb": 56.390625,
+          "memory_vms_mb": 431976.9375,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 6.605088
+        },
+        "simulation_time": "2035-02-19 00:00:00.000003650",
+        "wallclock_elapsed": "0 days 00:00:05.589099"
+      },
+      "log_dir": "run-20260524-092908",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.39,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.67,
+        "seed": 3839692532,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260524-092908",
+      "started_at": "2026-05-24T09:29:08.455158Z",
+      "status": "stopped"
+    },
+    {
+      "error": "Simulation stopped from dashboard.",
+      "exit_code": -15,
+      "failure_detail": null,
+      "failure_reason": "user_stopped",
+      "finished_at": "2026-05-24T09:33:03.794311Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 1.9518325632115716,
+          "memory_rss_mb": 28.5625,
+          "memory_vms_mb": 432104.875,
+          "open_files": 0,
+          "status": "running",
+          "threads": 5,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 40.1,
+          "ram_percent": 85.4,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.23291015625
+        },
+        "messages_processed": 1500000,
+        "progress_pct": 13.518518518531378,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 99.19686936251422,
+          "memory_rss_mb": 47.328125,
+          "memory_vms_mb": 431985.578125,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 8.695831
+        },
+        "simulation_time": "2035-03-15 00:00:00.000006600",
+        "wallclock_elapsed": "0 days 00:00:08.138513"
+      },
+      "log_dir": "run-20260524-093254",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.39,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.67,
+        "seed": 4065810085,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260524-093254",
+      "started_at": "2026-05-24T09:32:54.570742Z",
+      "status": "stopped"
+    },
+    {
+      "error": "Simulation stopped from dashboard.",
+      "exit_code": -15,
+      "failure_detail": null,
+      "failure_reason": "user_stopped",
+      "finished_at": "2026-05-24T09:34:48.329260Z",
+      "live": {
+        "api_process": {
+          "available": true,
+          "cpu_percent": 0.6478346366011404,
+          "memory_rss_mb": 28.515625,
+          "memory_vms_mb": 432121.0,
+          "open_files": 0,
+          "status": "running",
+          "threads": 6,
+          "uptime_seconds": null
+        },
+        "gpu": {
+          "available": false,
+          "reason": "nvidia_smi_not_found"
+        },
+        "host_system": {
+          "available": true,
+          "cpu_percent": 46.5,
+          "ram_percent": 86.4,
+          "ram_total_gb": 8.0,
+          "ram_used_gb": 3.27001953125
+        },
+        "messages_processed": 900000,
+        "progress_pct": 8.148148148158864,
+        "simulation_process": {
+          "available": true,
+          "cpu_percent": 96.75245542644379,
+          "memory_rss_mb": 59.09375,
+          "memory_vms_mb": 431981.0625,
+          "open_files": 0,
+          "status": "running",
+          "threads": 1,
+          "uptime_seconds": 6.434072
+        },
+        "simulation_time": "2035-02-14 00:00:00.000005750",
+        "wallclock_elapsed": "0 days 00:00:05.230981"
+      },
+      "log_dir": "run-20260524-093441",
+      "params": {
+        "automation_adoption_rate": 0.02,
+        "firms": 15,
+        "households": 120,
+        "income_tax_rate": 0.39,
+        "labor_displacement_lag": 3,
+        "months": 18,
+        "neutral_rate": 0.02,
+        "productivity_gain_factor": 0.45,
+        "retraining_subsidy": 0.67,
+        "seed": 4172966395,
+        "task_substitution_elasticity": 0.3,
+        "unemployment_support": 9000,
+        "wake_hours": 24
+      },
+      "pid": null,
+      "run_id": "run-20260524-093441",
+      "started_at": "2026-05-24T09:34:41.725029Z",
+      "status": "stopped"
     }
   ]
 }

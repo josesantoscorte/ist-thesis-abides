@@ -270,6 +270,10 @@ export default function App() {
     };
   }, [results]);
 
+  const hostCpu = percentValue(monitor?.host_system?.cpu_percent);
+  const simulationCpu = run ? percentValue(run.live.simulation_process?.cpu_percent) : "-";
+  const simulationRam = run ? mbValue(run.live.simulation_process?.memory_rss_mb) : "-";
+
   const chartSeries = useMemo(() => {
     if (!results?.timeseries?.length) {
       return [];
@@ -295,28 +299,65 @@ export default function App() {
               <span className="dot" />
               <span>{run ? `Run ${run.status}` : "No active run"}</span>
             </div>
+            <div className="topbar-telemetry" aria-label="System telemetry">
+              <div className="topbar-telemetry-card">
+                <span className="topbar-telemetry-icon">
+                  <UiIcon icon={Cpu} size="sm" />
+                </span>
+                <span className="topbar-telemetry-main">
+                  <span className="topbar-telemetry-line">
+                    <span className="topbar-telemetry-label">Host CPU</span>
+                    <span className="topbar-telemetry-value">{hostCpu}</span>
+                  </span>
+                </span>
+              </div>
+              <div className="topbar-telemetry-card">
+                <span className="topbar-telemetry-icon">
+                  <UiIcon icon={Gauge} size="sm" />
+                </span>
+                <span className="topbar-telemetry-main">
+                  <span className="topbar-telemetry-line">
+                    <span className="topbar-telemetry-label">Simulation CPU</span>
+                    <span className="topbar-telemetry-value">{simulationCpu}</span>
+                  </span>
+                </span>
+              </div>
+              <div className="topbar-telemetry-card">
+                <span className="topbar-telemetry-icon">
+                  <UiIcon icon={Gauge} size="sm" />
+                </span>
+                <span className="topbar-telemetry-main">
+                  <span className="topbar-telemetry-line">
+                    <span className="topbar-telemetry-label">Simulation RAM</span>
+                    <span className="topbar-telemetry-value">{simulationRam}</span>
+                  </span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="tabs">
-          <button
-            className={activeTab === "monitor" ? "tab active" : "tab"}
-            onClick={() => setActiveTab("monitor")}
-          >
-            <UiIcon icon={Activity} />
-            Live Monitor
-          </button>
-          <button
-            className={activeTab === "results" ? "tab active" : "tab"}
-            onClick={() => {
-              setActiveTab("results");
-              if (runs.length > 0 && !selectedRunId) {
-                void loadResults(runs[0].run_id);
-              }
-            }}
-          >
-            <UiIcon icon={BarChart3} />
-            History & Results
-          </button>
+        <div className="topbar-right">
+          <div className="tabs">
+            <button
+              className={activeTab === "monitor" ? "tab active" : "tab"}
+              onClick={() => setActiveTab("monitor")}
+            >
+              <UiIcon icon={Activity} />
+              Live Monitor
+            </button>
+            <button
+              className={activeTab === "results" ? "tab active" : "tab"}
+              onClick={() => {
+                setActiveTab("results");
+                if (runs.length > 0 && !selectedRunId) {
+                  void loadResults(runs[0].run_id);
+                }
+              }}
+            >
+              <UiIcon icon={BarChart3} />
+              History & Results
+            </button>
+          </div>
         </div>
       </header>
 
@@ -334,39 +375,6 @@ export default function App() {
         <main className="workspace">
           {activeTab === "monitor" ? (
           <section className="live-monitor-layout">
-            <section className="panel">
-              <h3>System Telemetry</h3>
-              <div className="monitor-groups">
-                <div className="monitor-box">
-                  <h4>
-                    <UiIcon icon={Cpu} />
-                    Hardware
-                  </h4>
-                  <div className="kpis live-kpis live-top-metrics">
-                    <div className="kpi">
-                      <strong>Host CPU</strong>
-                      <span>{percentValue(monitor?.host_system?.cpu_percent)}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="monitor-box">
-                  <h4>
-                    <UiIcon icon={Gauge} />
-                    Simulation Runtime
-                  </h4>
-                  <div className="kpis live-kpis live-top-metrics">
-                    <div className="kpi">
-                      <strong>Simulation CPU</strong>
-                      <span>{run ? percentValue(run.live.simulation_process?.cpu_percent) : "-"}</span>
-                    </div>
-                    <div className="kpi">
-                      <strong>Simulation RAM (RSS)</strong>
-                      <span>{run ? mbValue(run.live.simulation_process?.memory_rss_mb) : "-"}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
             <section className="panel">
               <h3>Simulation Monitoring</h3>
               {run ? (

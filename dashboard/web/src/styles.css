@@ -66,11 +66,12 @@ body {
   grid-template-columns: 10px 1fr;
   gap: 8px;
   align-items: center;
-  border: 1px solid #3f3f46;
-  border-radius: 999px;
-  padding: 8px 12px;
+  min-height: 44px;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 7px 12px;
   font-size: 12px;
-  background: #18181b;
+  background: #111113;
 }
 
 .status-pill .dot {
@@ -104,7 +105,7 @@ body {
 
 button {
   border: 1px solid #3f3f46;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #27272a;
   color: #f4f4f5;
   padding: 10px 12px;
@@ -178,27 +179,134 @@ input {
   gap: 8px;
 }
 
+.topbar-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.topbar-telemetry {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.topbar-telemetry-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 122px;
+  min-height: 44px;
+  padding: 7px 9px;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  background: #111113;
+}
+
+.topbar-telemetry-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #a1a1aa;
+  flex-shrink: 0;
+}
+
+.topbar-telemetry-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.topbar-telemetry-line {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.topbar-telemetry-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+  line-height: 1;
+}
+
+.topbar-telemetry-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f4f4f5;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
 .top-actions {
   width: auto;
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .top-actions > button {
   min-width: 88px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.top-actions > button:nth-child(1):not(:disabled) {
+  background: rgba(74, 222, 128, 0.15);
+  border-color: rgba(74, 222, 128, 0.4);
+  color: #4ade80;
+}
+
+.top-actions > button:nth-child(1):not(:disabled):hover {
+  background: rgba(74, 222, 128, 0.25);
+  border-color: rgba(74, 222, 128, 0.6);
+}
+
+.top-actions > button.secondary:not(:disabled) {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #f87171;
+}
+
+.top-actions > button.secondary:not(:disabled):hover {
+  background: rgba(248, 113, 113, 0.25);
+  border-color: rgba(248, 113, 113, 0.6);
+}
+
+.top-actions > button,
+.top-actions > .status-pill,
+.top-actions > .topbar-telemetry .topbar-telemetry-card {
+  min-height: 44px;
 }
 
 .tab {
+  min-height: 44px;
   background: #18181b;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
+  padding-top: 9px;
+  padding-bottom: 9px;
 }
 
 .tab.active {

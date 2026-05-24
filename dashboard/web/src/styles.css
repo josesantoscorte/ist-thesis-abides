@@ -35,7 +35,7 @@ body {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: minmax(300px, 360px) 1fr;
   grid-template-rows: minmax(0, 1fr);
   align-items: stretch;
   gap: 12px;
@@ -48,17 +48,6 @@ body {
   grid-template-rows: minmax(0, 1fr);
 }
 
-.sidebar {
-  background: #111113;
-  border: 1px solid #27272a;
-  border-radius: 14px;
-  padding: 20px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: 100%;
-}
-
 .ui-icon {
   display: block;
   flex-shrink: 0;
@@ -66,18 +55,10 @@ body {
 }
 
 .monitor-box h4,
-.live-graph-header h4,
-.parameter-scroll h2,
-.preset-row label > span:first-child {
+.live-graph-header h4 {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-}
-
-.sidebar-header p {
-  margin: 4px 0 0;
-  color: #a1a1aa;
-  font-size: 13px;
 }
 
 .status-pill {
@@ -143,41 +124,6 @@ button.secondary {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.preset-row select {
-  margin-top: 6px;
-  border-radius: 8px;
-  border: 1px solid #3f3f46;
-  background: #09090b;
-  color: #e4e4e7;
-  padding: 0 10px;
-  height: 30px;
-  font-size: 14px;
-  line-height: 60px;
-  width: 100%;
-}
-
-.parameter-scroll {
-  margin-top: 4px;
-  overflow: auto;
-  direction: rtl;
-  padding-left: 12px;
-}
-
-.parameter-scroll > * {
-  direction: ltr;
-}
-
-.parameter-scroll h2 {
-  font-size: 14px;
-  margin: 0 0 10px;
-}
-
-.parameter-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
 }
 
 label {
@@ -1047,8 +993,8 @@ input {
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    max-height: none;
+  .config-sidebar {
+    max-height: 48vh;
   }
 
   .split-layout {
@@ -1056,10 +1002,6 @@ input {
   }
 
   .monitor-groups {
-    grid-template-columns: 1fr;
-  }
-
-  .parameter-grid {
     grid-template-columns: 1fr;
   }
 

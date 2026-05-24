@@ -19,111 +19,10 @@ import { isNonSuccessRun } from "./runOutcome";
 import { formatMessageCount } from "./runDisplayName";
 import { RunTitle } from "./RunTitle";
 import type { MonitorSnapshot, ResultsResponse, RunState, SimulationParams, TelemetryEvent } from "./types";
-import { Activity, BarChart3, Cpu, Gauge, Layers, Play, SlidersHorizontal, Square, UiIcon } from "./ui/icons";
+import { ParameterSidebar } from "./ParameterSidebar";
+import { defaultParams, type PresetKey } from "./simulationConfig";
+import { Activity, BarChart3, Cpu, Gauge, Play, Square, UiIcon } from "./ui/icons";
 import "./styles.css";
-
-const defaultParams: SimulationParams = {
-  seed: null,
-  households: 120,
-  firms: 15,
-  months: 18,
-  wake_hours: 24,
-  automation_adoption_rate: 0.02,
-  task_substitution_elasticity: 0.3,
-  productivity_gain_factor: 0.45,
-  labor_displacement_lag: 3,
-  income_tax_rate: 0.18,
-  unemployment_support: 9000,
-  retraining_subsidy: 0.03,
-  neutral_rate: 0.02
-};
-
-type PresetKey =
-  | "baseline"
-  | "high-automation"
-  | "high-tax"
-  | "stress-medium"
-  | "stress-high"
-  | "stress-extreme";
-
-const presetConfigs: Record<PresetKey, SimulationParams> = {
-  baseline: defaultParams,
-  "high-automation": {
-    ...defaultParams,
-    automation_adoption_rate: 0.07,
-    task_substitution_elasticity: 0.55,
-    productivity_gain_factor: 0.85,
-    labor_displacement_lag: 2
-  },
-  "high-tax": {
-    ...defaultParams,
-    income_tax_rate: 0.35,
-    unemployment_support: 14000,
-    retraining_subsidy: 0.08,
-    neutral_rate: 0.025
-  },
-  "stress-medium": {
-    ...defaultParams,
-    households: 1000,
-    firms: 120,
-    months: 24,
-    wake_hours: 2,
-    automation_adoption_rate: 0.06,
-    task_substitution_elasticity: 0.75,
-    productivity_gain_factor: 0.9,
-    labor_displacement_lag: 1,
-    income_tax_rate: 0.22,
-    unemployment_support: 11000,
-    retraining_subsidy: 0.06,
-    neutral_rate: 0.025
-  },
-  "stress-high": {
-    ...defaultParams,
-    households: 2500,
-    firms: 300,
-    months: 30,
-    wake_hours: 1,
-    automation_adoption_rate: 0.08,
-    task_substitution_elasticity: 1.0,
-    productivity_gain_factor: 1.2,
-    labor_displacement_lag: 1,
-    income_tax_rate: 0.24,
-    unemployment_support: 11500,
-    retraining_subsidy: 0.08,
-    neutral_rate: 0.028
-  },
-  "stress-extreme": {
-    ...defaultParams,
-    households: 5000,
-    firms: 600,
-    months: 36,
-    wake_hours: 1,
-    automation_adoption_rate: 0.1,
-    task_substitution_elasticity: 1.2,
-    productivity_gain_factor: 1.5,
-    labor_displacement_lag: 1,
-    income_tax_rate: 0.25,
-    unemployment_support: 12000,
-    retraining_subsidy: 0.1,
-    neutral_rate: 0.03
-  }
-};
-
-const fieldLimits: Partial<Record<keyof SimulationParams, { min: number; max: number }>> = {
-  seed: { min: 0, max: 4294967295 },
-  households: { min: 1, max: 20000 },
-  firms: { min: 1, max: 5000 },
-  months: { min: 1, max: 120 },
-  wake_hours: { min: 1, max: 168 },
-  automation_adoption_rate: { min: 0, max: 1 },
-  task_substitution_elasticity: { min: 0, max: 3 },
-  productivity_gain_factor: { min: 0, max: 3 },
-  labor_displacement_lag: { min: 1, max: 24 },
-  income_tax_rate: { min: 0, max: 1 },
-  unemployment_support: { min: 0, max: 1000000 },
-  retraining_subsidy: { min: 0, max: 1 },
-  neutral_rate: { min: -0.1, max: 1 }
-};
 
 const chartColors = {
   blue: "#0072B2",
@@ -169,7 +68,6 @@ export default function App() {
   const previousRunId = useRef<string | null>(null);
 
   const isActive = run?.status === "running" || run?.status === "stopping";
-  const paramKeys = Object.keys(params) as Array<keyof SimulationParams>;
   const statusTone = run?.status ?? "idle";
 
   useEffect(() => {
@@ -296,11 +194,6 @@ export default function App() {
     previousRunId.current = run.run_id;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run, runs]);
-
-  const applyPreset = (preset: PresetKey) => {
-    setSelectedPreset(preset);
-    setParams({ ...presetConfigs[preset] });
-  };
 
   const start = async () => {
     setLoading(true);
@@ -429,62 +322,13 @@ export default function App() {
 
       <div className={activeTab === "monitor" ? "app-shell" : "app-shell app-shell--full"}>
         {activeTab === "monitor" && (
-          <aside className="sidebar">
-            <div className="preset-row">
-              <label>
-                <span>
-                  <UiIcon icon={Layers} />
-                  Preset
-                </span>
-                <select
-                  value={selectedPreset}
-                  onChange={(e) => applyPreset(e.target.value as PresetKey)}
-                >
-                  <option value="baseline">baseline</option>
-                  <option value="high-automation">high-automation</option>
-                  <option value="high-tax">high-tax</option>
-                  <option value="stress-medium">stress-medium</option>
-                  <option value="stress-high">stress-high</option>
-                  <option value="stress-extreme">stress-extreme</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="parameter-scroll">
-              <h2>
-                <UiIcon icon={SlidersHorizontal} />
-                Parameters
-              </h2>
-              <div className="parameter-grid">
-                {paramKeys.map((key) => {
-                  const value = params[key];
-                  const limits = fieldLimits[key];
-                  return (
-                    <label key={String(key)}>
-                      <span>{String(key).replace(/_/g, " ")}</span>
-                      <input
-                        type="number"
-                        min={limits?.min}
-                        max={limits?.max}
-                        step={typeof value === "number" && Math.abs(value) < 1 ? "0.01" : "1"}
-                        value={value ?? ""}
-                        placeholder={limits ? `${limits.min} - ${limits.max}` : undefined}
-                        onChange={(e) => {
-                          const raw = e.target.value.trim();
-                          const parsed = raw === "" ? null : Number(raw);
-                          const nextValue = Number.isNaN(parsed) ? value : parsed;
-                          setParams((prev) => ({
-                            ...prev,
-                            [key]: nextValue as SimulationParams[typeof key]
-                          }));
-                        }}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          </aside>
+          <ParameterSidebar
+            params={params}
+            selectedPreset={selectedPreset}
+            onPresetChange={setSelectedPreset}
+            onParamsChange={setParams}
+            disabled={isActive}
+          />
         )}
 
         <main className="workspace">
@@ -557,7 +401,7 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <p>No active run right now. Adjust parameters on the left and start a simulation.</p>
+                  <p>No active run. Pick a preset or tune parameters in the configuration panel, then press Run.</p>
                   <LiveAgentGraph run={null} params={params} telemetry={[]} />
                 </>
               )}
